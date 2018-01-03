@@ -2,6 +2,7 @@
 #include "Config.h"
 #include "ConfigServer.h"
 
+#define MODE_PIN          16
 #define LED_PIN           13
 #define NEO_PIXEL_PIN     5
 #define NUM_OF_NEO_PIXELS 1
@@ -16,9 +17,19 @@ void setup() {
     pixels.begin();
     pixels.setBrightness(255);
 
-    pinMode(LED_PIN, OUTPUT);
+    pinMode(LED_PIN,  OUTPUT);
+    pinMode(MODE_PIN, INPUT);
+
     Config::Initialize();
-    ConfigServer::Start();
+
+    if (digitalRead(MODE_PIN) == LOW) {
+        Serial.println("Detected Config mode.");
+        ConfigServer::Start();
+        // can not reach here.
+    } else {
+        Serial.println("Detected Normal mode.");
+    }
+
 }
 
 void loop() {

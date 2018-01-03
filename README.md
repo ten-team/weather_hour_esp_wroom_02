@@ -18,6 +18,5 @@
 
 ## ToDo
 
-- button x
 - NCMB
 - Real time(optional)
