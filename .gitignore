@@ -32,3 +32,6 @@
 *.app
 .pioenvs
 .piolibdeps
+
+# for Editor
+*~
