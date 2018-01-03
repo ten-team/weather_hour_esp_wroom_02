@@ -1,6 +1,5 @@
 #include "ConfigServer.h"
 
-#include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
 
@@ -57,6 +56,7 @@ static void handlePost()
 
 void ConfigServer::Start()
 {
+    WiFi.mode(WIFI_AP);
     WiFi.softAP(server_mode_ssid, server_mode_password);
 
     server.on("/", HTTP_GET,  handleGet);

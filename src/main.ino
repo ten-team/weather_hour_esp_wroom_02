@@ -1,4 +1,6 @@
 #include <Adafruit_NeoPixel.h>
+#include <ESP8266WiFi.h>
+
 #include "Config.h"
 #include "ConfigServer.h"
 
@@ -10,6 +12,23 @@
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUM_OF_NEO_PIXELS,
                                              NEO_PIXEL_PIN,
                                              NEO_GRB + NEO_KHZ800);
+
+const uint32_t BLACK_COLOR = Adafruit_NeoPixel::Color(0, 0, 0);
+const uint32_t ERROR_COLOR = Adafruit_NeoPixel::Color(255, 0, 0);
+const uint32_t WAITING_COLOR = Adafruit_NeoPixel::Color(255, 255, 51);
+const uint32_t CONFIG_COLOR = Adafruit_NeoPixel::Color(255, 255, 255);
+
+static void showError() {
+    while (true) {
+        pixels.setPixelColor(0, ERROR_COLOR);
+        pixels.show();
+        delay(1000);
+
+        pixels.setPixelColor(0, BLACK_COLOR);
+        pixels.show();
+        delay(1000);
+    }
+}
 
 void setup() {
     Serial.begin(115200);
@@ -24,12 +43,40 @@ void setup() {
 
     if (digitalRead(MODE_PIN) == LOW) {
         Serial.println("Detected Config mode.");
+        pixels.setPixelColor(0, CONFIG_COLOR);
+        pixels.show();
         ConfigServer::Start();
         // can not reach here.
-    } else {
-        Serial.println("Detected Normal mode.");
     }
+    Serial.println("Detected Normal mode.");
 
+    String ssid;
+    String pass;
+    if (!Config::ReadWifiConfig(ssid, pass)) {
+        Serial.println("Faild to read config.");
+        showError();
+    }
+    // If forget mode(WIFI_STA), mode might be WIFI_AP_STA.
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(ssid.c_str(), pass.c_str());
+
+    while (WiFi.status() != WL_CONNECTED) {
+        pixels.setPixelColor(0, WAITING_COLOR);
+        pixels.show();
+        Serial.print(".");
+        delay(500);
+
+        pixels.setPixelColor(0, BLACK_COLOR);
+        pixels.show();
+        Serial.print(".");
+        delay(500);
+    }
+    Serial.println("");
+
+    Serial.println("WiFi connected");
+
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
 }
 
 void loop() {
