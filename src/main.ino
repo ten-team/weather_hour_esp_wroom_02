@@ -32,6 +32,7 @@ static void showError() {
 
 void setup() {
     Serial.begin(115200);
+    Serial.println("");
 
     pixels.begin();
     pixels.setBrightness(255);
@@ -71,10 +72,8 @@ void setup() {
         Serial.print(".");
         delay(500);
     }
-    Serial.println("");
 
     Serial.println("WiFi connected");
-
     Serial.print("IP address: ");
     Serial.println(WiFi.localIP());
 }
