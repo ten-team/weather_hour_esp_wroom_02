@@ -41,7 +41,10 @@ void setup() {
     pinMode(LED_PIN,  OUTPUT);
     pinMode(MODE_PIN, INPUT);
 
-    Config::Initialize();
+    if (!Config::Initialize()) {
+        Serial.println("Faild to execute SPIFFS.begin().");
+        showError();
+    }
 
     if (digitalRead(MODE_PIN) == LOW) {
         Serial.println("Detected Config mode.");

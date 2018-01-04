@@ -19,6 +19,8 @@ static void handleGet()
     String html = "<h1>WiFi config</h1>";
     if (result) {
         html += "Successed to read wifi config.";
+    } else {
+        Serial.println("Failed to read wifi config.");
     }
     html += "<form method='post'>";
     html += "<ul>";
@@ -46,6 +48,7 @@ static void handlePost()
         html += "Successed to write wifi config.";
     } else {
         html += "Failed to write wifi config.";
+        Serial.println("Failed to write wifi config.");
     }
     html += "<ul>";
     html += "  <li>SSID : " + ssid + "</li>";
