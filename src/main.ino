@@ -106,7 +106,6 @@ void loop() {
             pixels.setPixelColor(NEO_PIXEL_STOCK_0, exists? EXISTS_COLOR: NOT_EXSITS_COLOR);
             pixels.show();
             delay(NCMB_AFTER_BUTTON_INTERVAL);
-            return;
         }
         delay(NCMB_BUTTON_INTERVAL);
     }
