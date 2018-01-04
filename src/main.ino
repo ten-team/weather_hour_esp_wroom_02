@@ -31,30 +31,7 @@ static void showError() {
     }
 }
 
-void setup() {
-    Serial.begin(115200);
-    Serial.println("");
-
-    pixels.begin();
-    pixels.setBrightness(255);
-
-    pinMode(LED_PIN,  OUTPUT);
-    pinMode(MODE_PIN, INPUT);
-
-    if (!Config::Initialize()) {
-        Serial.println("Faild to execute SPIFFS.begin().");
-        showError();
-    }
-
-    if (digitalRead(MODE_PIN) == LOW) {
-        Serial.println("Detected Config mode.");
-        pixels.setPixelColor(NEO_PIXEL_LED_INDEX, CONFIG_COLOR);
-        pixels.show();
-        ConfigServer::Start();
-        // can not reach here.
-    }
-    Serial.println("Detected Normal mode.");
-
+static void reconnectWifi() {
     String ssid;
     String pass;
     if (!Config::ReadWifiConfig(ssid, pass)) {
@@ -80,6 +57,32 @@ void setup() {
     Serial.println("WiFi connected");
     Serial.print("IP address: ");
     Serial.println(WiFi.localIP());
+}
+
+void setup() {
+    Serial.begin(115200);
+    Serial.println("");
+
+    pixels.begin();
+    pixels.setBrightness(255);
+
+    pinMode(LED_PIN,  OUTPUT);
+    pinMode(MODE_PIN, INPUT);
+
+    if (!Config::Initialize()) {
+        Serial.println("Faild to execute SPIFFS.begin().");
+        showError();
+    }
+
+    if (digitalRead(MODE_PIN) == LOW) {
+        Serial.println("Detected Config mode.");
+        pixels.setPixelColor(NEO_PIXEL_LED_INDEX, CONFIG_COLOR);
+        pixels.show();
+        ConfigServer::Start();
+        // can not reach here.
+    }
+    Serial.println("Detected Normal mode.");
+    reconnectWifi();
 }
 
 void loop() {
