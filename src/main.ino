@@ -16,10 +16,13 @@ Adafruit_NeoPixel pixels     = Adafruit_NeoPixel(NUM_OF_NEO_PIXELS,
                                                  NEO_PIXEL_PIN,
                                                  NEO_GRB + NEO_KHZ800);
 
-const uint32_t BLACK_COLOR   = Adafruit_NeoPixel::Color(0, 0, 0);
-const uint32_t ERROR_COLOR   = Adafruit_NeoPixel::Color(255, 0, 0);
-const uint32_t WAITING_COLOR = Adafruit_NeoPixel::Color(255, 255, 51);
-const uint32_t CONFIG_COLOR  = Adafruit_NeoPixel::Color(255, 255, 255);
+const uint32_t BLACK_COLOR      = Adafruit_NeoPixel::Color(0, 0, 0);
+const uint32_t ERROR_COLOR      = Adafruit_NeoPixel::Color(255, 0, 0);
+const uint32_t WAITING_COLOR    = Adafruit_NeoPixel::Color(255, 255, 51);
+const uint32_t CONFIG_COLOR     = Adafruit_NeoPixel::Color(255, 255, 255);
+const uint32_t EXISTS_COLOR     = Adafruit_NeoPixel::Color(0, 0, 0);
+const uint32_t NOT_EXSITS_COLOR = Adafruit_NeoPixel::Color(255, 0, 0);
+const int NCMB_ACCESS_INTERVAL  = 5 * 60 * 1000;
 
 static void showError() {
     while (true) {
@@ -88,14 +91,16 @@ void setup() {
 }
 
 void loop() {
-    YudetamagoClient::GetExistance(OBJECT_ID);
-    pixels.setPixelColor(NEO_PIXEL_LED_INDEX, 255, 0, 0);
+    bool exists = false;
+    if (! YudetamagoClient::GetExistance(OBJECT_ID, exists) ) {
+        Serial.println("Faild to access NCMB.");
+        showError();
+    }
+    if (exists) {
+        pixels.setPixelColor(NEO_PIXEL_LED_INDEX, EXISTS_COLOR);
+    } else {
+        pixels.setPixelColor(NEO_PIXEL_LED_INDEX, NOT_EXSITS_COLOR);
+    }
     pixels.show();
-    digitalWrite(LED_PIN, HIGH);
-    delay(1000);
-
-    pixels.setPixelColor(NEO_PIXEL_LED_INDEX, 0, 255, 0);
-    pixels.show();
-    digitalWrite(LED_PIN, LOW);
-    delay(1000);
+    delay(NCMB_ACCESS_INTERVAL);
 }

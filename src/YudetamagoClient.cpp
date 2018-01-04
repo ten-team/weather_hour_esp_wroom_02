@@ -12,7 +12,7 @@
 // https://github.com/esp8266/Arduino/issues/2556
 #define NCMB_FINGERPRINT "ED:74:40:90:98:20:C4:0A:C3:DD:9B:66:8C:51:8F:DF:0F:EC:53:11"
 
-bool YudetamagoClient::GetExistance(const char* objectId)
+bool YudetamagoClient::GetExistance(const char *objectId, bool& exists)
 {
 
     String url = "https://mb.api.cloud.nifty.com/2013-09-01/classes/ToggleStocker?where=%7B%22objectId%22%3A%22";
@@ -33,11 +33,20 @@ bool YudetamagoClient::GetExistance(const char* objectId)
         return false;
     }
 
-    Serial.print("http GET returns ");
+    String body = http.getString();
+    if (body.lastIndexOf("\"existing\":\"1\"") != -1) {
+        exists = true;
+        return true;
+    } else if (body.lastIndexOf("\"existing\":\"0\"") != -1) {
+        exists = false;
+        return true;
+    }
+
+    Serial.print("http GET unknown body: ");
     Serial.print(httpCode, DEC);
-    Serial.println("");
+    Serial.println(": ");
     Serial.println(http.getString());
     http.end();
-    return true;
+    return false;
 }
 
