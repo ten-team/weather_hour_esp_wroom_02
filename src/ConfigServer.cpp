@@ -41,10 +41,9 @@ static void handlePost()
     String ssid = server.arg("ssid");
     String pass = server.arg("pass");
 
-    bool result = Config::WriteWifiConfig(ssid, pass);
-
     String html = "<h1>WiFi config</h1>";
-    if (result) {
+    if (Config::WriteWifiConfig(ssid, pass) &&
+        Config::ReadWifiConfig(ssid, pass)) {
         html += "Successed to write wifi config.";
     } else {
         html += "Failed to write wifi config.";
