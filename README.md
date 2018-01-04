@@ -18,5 +18,6 @@
 
 ## ToDo
 
-- NCMB(Post)
 - Real time(optional)
+- Specify objectId(optional)
+- Error log(optional)
