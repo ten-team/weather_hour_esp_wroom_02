@@ -14,10 +14,9 @@ static void handleGet()
 {
     String ssid;
     String pass;
-    bool result = Config::ReadWifiConfig(ssid, pass);
 
     String html = "<h1>WiFi config</h1>";
-    if (result) {
+    if (Config::ReadWifiConfig(ssid, pass)) {
         html += "Successed to read wifi config.";
     } else {
         Serial.println("Failed to read wifi config.");
