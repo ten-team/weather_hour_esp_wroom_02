@@ -51,12 +51,7 @@ bool YudetamagoClient::GetExistance(const char *objectId, bool& exists)
 
 bool YudetamagoClient::SetExistance(const char *objectId, bool exists)
 {
-    String command;
-    if (exists) {
-        command = "{\"existing\":\"1\"}";
-    } else {
-        command = "{\"existing\":\"0\"}";
-    }
+    String command = exists? "{\"existing\":\"1\"}": "{\"existing\":\"0\"}";
     String url = "https://mb.api.cloud.nifty.com/2013-09-01/classes/ToggleStocker/";
     url += objectId;
     HTTPClient http;
@@ -66,19 +61,15 @@ bool YudetamagoClient::SetExistance(const char *objectId, bool exists)
     http.addHeader("X-NCMB-Signature",       SET_EXISTANCE_SIGNATURE);
     http.addHeader("Content-Type",           "application/json");
     int httpCode = http.sendRequest("PUT", command);
-    if (httpCode < 0) {
-        Serial.print("http POST error: ");
-        Serial.print(httpCode, DEC);
-        Serial.println(": " + http.errorToString(httpCode));
+    if (httpCode != 200) {
+        Serial.printf("SetExistance(%s) error: http status code %d: %s\n",
+                      objectId,
+                      httpCode,
+                      http.errorToString(httpCode).c_str());
         http.end();
         return false;
     }
 
-    String body = http.getString();
-    Serial.print("http POST body: ");
-    Serial.print(httpCode, DEC);
-    Serial.println(": ");
-    Serial.println(http.getString());
     http.end();
     return true;
 }
