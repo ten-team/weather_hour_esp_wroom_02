@@ -14,10 +14,10 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUM_OF_NEO_PIXELS,
                                              NEO_PIXEL_PIN,
                                              NEO_GRB + NEO_KHZ800);
 
-const uint32_t BLACK_COLOR = Adafruit_NeoPixel::Color(0, 0, 0);
-const uint32_t ERROR_COLOR = Adafruit_NeoPixel::Color(255, 0, 0);
+const uint32_t BLACK_COLOR   = Adafruit_NeoPixel::Color(0, 0, 0);
+const uint32_t ERROR_COLOR   = Adafruit_NeoPixel::Color(255, 0, 0);
 const uint32_t WAITING_COLOR = Adafruit_NeoPixel::Color(255, 255, 51);
-const uint32_t CONFIG_COLOR = Adafruit_NeoPixel::Color(255, 255, 255);
+const uint32_t CONFIG_COLOR  = Adafruit_NeoPixel::Color(255, 255, 255);
 
 static void showError() {
     while (true) {
