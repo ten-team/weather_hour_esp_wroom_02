@@ -4,10 +4,11 @@
 #include "Config.h"
 #include "ConfigServer.h"
 
-#define MODE_PIN          16
-#define LED_PIN           13
-#define NEO_PIXEL_PIN     5
-#define NUM_OF_NEO_PIXELS 1
+#define MODE_PIN            16
+#define LED_PIN             13
+#define NEO_PIXEL_PIN       5
+#define NUM_OF_NEO_PIXELS   1
+#define NEO_PIXEL_LED_INDEX 0
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUM_OF_NEO_PIXELS,
                                              NEO_PIXEL_PIN,
@@ -20,11 +21,11 @@ const uint32_t CONFIG_COLOR = Adafruit_NeoPixel::Color(255, 255, 255);
 
 static void showError() {
     while (true) {
-        pixels.setPixelColor(0, ERROR_COLOR);
+        pixels.setPixelColor(NEO_PIXEL_LED_INDEX, ERROR_COLOR);
         pixels.show();
         delay(1000);
 
-        pixels.setPixelColor(0, BLACK_COLOR);
+        pixels.setPixelColor(NEO_PIXEL_LED_INDEX, BLACK_COLOR);
         pixels.show();
         delay(1000);
     }
@@ -44,7 +45,7 @@ void setup() {
 
     if (digitalRead(MODE_PIN) == LOW) {
         Serial.println("Detected Config mode.");
-        pixels.setPixelColor(0, CONFIG_COLOR);
+        pixels.setPixelColor(NEO_PIXEL_LED_INDEX, CONFIG_COLOR);
         pixels.show();
         ConfigServer::Start();
         // can not reach here.
@@ -62,12 +63,12 @@ void setup() {
     WiFi.begin(ssid.c_str(), pass.c_str());
 
     while (WiFi.status() != WL_CONNECTED) {
-        pixels.setPixelColor(0, WAITING_COLOR);
+        pixels.setPixelColor(NEO_PIXEL_LED_INDEX, WAITING_COLOR);
         pixels.show();
         Serial.print(".");
         delay(500);
 
-        pixels.setPixelColor(0, BLACK_COLOR);
+        pixels.setPixelColor(NEO_PIXEL_LED_INDEX, BLACK_COLOR);
         pixels.show();
         Serial.print(".");
         delay(500);
@@ -79,12 +80,12 @@ void setup() {
 }
 
 void loop() {
-    pixels.setPixelColor(0, 255, 0, 0);
+    pixels.setPixelColor(NEO_PIXEL_LED_INDEX, 255, 0, 0);
     pixels.show();
     digitalWrite(LED_PIN, HIGH);
     delay(1000);
 
-    pixels.setPixelColor(0, 0, 255, 0);
+    pixels.setPixelColor(NEO_PIXEL_LED_INDEX, 0, 255, 0);
     pixels.show();
     digitalWrite(LED_PIN, LOW);
     delay(1000);
