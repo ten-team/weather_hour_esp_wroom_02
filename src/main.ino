@@ -13,9 +13,9 @@
 #define NUM_OF_NEO_PIXELS 1
 #define NEO_PIXEL_STOCK_0 0
 
-Adafruit_NeoPixel pixels     = Adafruit_NeoPixel(NUM_OF_NEO_PIXELS,
-                                                 NEO_PIXEL_PIN,
-                                                 NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixels        = Adafruit_NeoPixel(NUM_OF_NEO_PIXELS,
+                                                    NEO_PIXEL_PIN,
+                                                    NEO_GRB + NEO_KHZ800);
 
 const uint32_t BLACK_COLOR      = Adafruit_NeoPixel::Color(0, 0, 0);
 const uint32_t ERROR_COLOR      = Adafruit_NeoPixel::Color(255, 0, 0);
@@ -23,8 +23,9 @@ const uint32_t WAITING_COLOR    = Adafruit_NeoPixel::Color(255, 255, 51);
 const uint32_t CONFIG_COLOR     = Adafruit_NeoPixel::Color(255, 255, 255);
 const uint32_t EXISTS_COLOR     = Adafruit_NeoPixel::Color(0, 0, 0);
 const uint32_t NOT_EXSITS_COLOR = Adafruit_NeoPixel::Color(255, 0, 0);
-const int NCMB_BUTTON_INTERVAL  = (100);
-const int NCMB_ACCESS_INTERVAL  = (5 * 60 * 1000);
+const int NCMB_BUTTON_INTERVAL       = (100);
+const int NCMB_AFTER_BUTTON_INTERVAL = (1000);
+const int NCMB_ACCESS_INTERVAL       = (5 * 60 * 1000);
 
 static void showError() {
     while (true) {
@@ -102,12 +103,10 @@ void loop() {
                 showError();
             }
 
-            if (exists) {
-                pixels.setPixelColor(NEO_PIXEL_STOCK_0, EXISTS_COLOR);
-            } else {
-                pixels.setPixelColor(NEO_PIXEL_STOCK_0, NOT_EXSITS_COLOR);
-            }
+            pixels.setPixelColor(NEO_PIXEL_STOCK_0, exists? EXISTS_COLOR: NOT_EXSITS_COLOR);
             pixels.show();
+            delay(NCMB_AFTER_BUTTON_INTERVAL);
+            return;
         }
         delay(NCMB_BUTTON_INTERVAL);
     }
@@ -116,10 +115,6 @@ void loop() {
         Serial.println("Faild to access NCMB.");
         showError();
     }
-    if (exists) {
-        pixels.setPixelColor(NEO_PIXEL_STOCK_0, EXISTS_COLOR);
-    } else {
-        pixels.setPixelColor(NEO_PIXEL_STOCK_0, NOT_EXSITS_COLOR);
-    }
+    pixels.setPixelColor(NEO_PIXEL_STOCK_0, exists? EXISTS_COLOR: NOT_EXSITS_COLOR);
     pixels.show();
 }
