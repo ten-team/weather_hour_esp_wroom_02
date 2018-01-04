@@ -24,10 +24,11 @@ bool YudetamagoClient::GetExistance(const char *objectId, bool& exists)
     http.addHeader("X-NCMB-Signature",       GET_EXISTANCE_SIGNATURE);
     http.addHeader("Content-Type",           "application/json");
     int httpCode = http.GET();
-    if (httpCode < 0) {
-        Serial.print("http GET error: ");
-        Serial.print(httpCode, DEC);
-        Serial.println(": " + http.errorToString(httpCode));
+    if (httpCode != 200) {
+        Serial.printf("GetExistance(%s) error: http status code %d: %s\n",
+                      objectId,
+                      httpCode,
+                      http.errorToString(httpCode).c_str());
         http.end();
         return false;
     }
@@ -35,16 +36,15 @@ bool YudetamagoClient::GetExistance(const char *objectId, bool& exists)
     String body = http.getString();
     if (body.lastIndexOf("\"existing\":\"1\"") != -1) {
         exists = true;
+        http.end();
         return true;
     } else if (body.lastIndexOf("\"existing\":\"0\"") != -1) {
         exists = false;
+        http.end();
         return true;
     }
 
-    Serial.print("http GET unknown body: ");
-    Serial.print(httpCode, DEC);
-    Serial.println(": ");
-    Serial.println(http.getString());
+    Serial.printf("GetExistance(%s) unknown body error: %s\n", body.c_str());
     http.end();
     return false;
 }
