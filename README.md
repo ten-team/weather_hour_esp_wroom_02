@@ -30,10 +30,12 @@
 
 - Adafruit NeoPixel Library (LGPL v3.0)
   https://github.com/adafruit/Adafruit_NeoPixel
+- Cryptographic suite for Arduino (SHA, HMAC-SHA) 
+  https://github.com/simonratner/Arduino-SHA-256
+  (Fix compile errors)
 
 ## ToDo
 
-- Real time(optional)
 - Error log(optional)
   - View from /admin.html
 - 5 button(optional)
