@@ -1,7 +1,9 @@
 #include <string.h>
+#if 0 // Fix compile error (ESD-WROOM-02 platformio)
 #include <avr/io.h>
 #include <avr/eeprom.h>
 #include <avr/pgmspace.h>
+#endif
 
 #include "sha256.h"
 
@@ -152,6 +154,7 @@ void Sha256::initHmac(const uint8_t *key, size_t keyLength) {
   reset();
 }
 
+#if 0 // Fix compile error (ESD-WROOM-02 platformio)
 void Sha256::initHmac_EEPROM(const uint8_t *key, size_t keyLength) {
   memset(keyBuffer, 0, BLOCK_LENGTH);
   if (keyLength > BLOCK_LENGTH) {
@@ -165,6 +168,7 @@ void Sha256::initHmac_EEPROM(const uint8_t *key, size_t keyLength) {
   }
   reset();
 }
+#endif
 
 uint8_t* Sha256::resultHmac(void) {
   uint8_t i;
