@@ -2,9 +2,9 @@
 
 #define LOG_CAPACITY 64
 
-static int log_size  = 0;
-static int log_next_write_index   = 0;
-static int log_level = Log::LOG_LEVEL_DEBUG;
+static int log_size             = 0;
+static int log_next_write_index = 0;
+static int log_level            = Log::LOG_LEVEL_INFO;
 
 static String logs[LOG_CAPACITY];
 
