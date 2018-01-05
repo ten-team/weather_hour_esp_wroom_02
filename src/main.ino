@@ -27,6 +27,7 @@ const uint32_t NOT_EXSITS_COLOR = Adafruit_NeoPixel::Color(255, 0, 0);
 const int NCMB_BUTTON_INTERVAL       = (100);
 const int NCMB_AFTER_BUTTON_INTERVAL = (1000);
 const int NCMB_ACCESS_INTERVAL       = (5 * 60 * 1000);
+String object_id;
 
 static void showError() {
     while (true) {
@@ -51,6 +52,7 @@ static void reconnectWifi() {
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid.c_str(), pass.c_str());
 
+    Log::Info("WiFi connecting...");
     while (WiFi.status() != WL_CONNECTED) {
         pixels.setPixelColor(NEO_PIXEL_STOCK_0, WAITING_COLOR);
         pixels.show();
@@ -96,6 +98,13 @@ void setup() {
         // can not reach here.
     }
     Log::Info("Detected Normal mode.");
+    if (!Config::ReadObjectId(object_id)) {
+        Log::Error("Faild to read objectId.");
+        showError();
+    }
+    String log = "objectId : ";
+    log += object_id;
+    Log::Info(log.c_str());
     reconnectWifi();
 }
 
@@ -115,7 +124,7 @@ void loop() {
             Log::Info("Detected button pressed: not exist");
         }
         String error;
-        if (!YudetamagoClient::SetExistance(OBJECT_ID, exists, error)) {
+        if (!YudetamagoClient::SetExistance(object_id.c_str(), exists, error)) {
             Log::Error(error.c_str());
             showError();
         }
@@ -127,7 +136,7 @@ void loop() {
 
     String error;
     bool existsPrev = exists;
-    if (!YudetamagoClient::GetExistance(OBJECT_ID, exists, error) ) {
+    if (!YudetamagoClient::GetExistance(object_id.c_str(), exists, error) ) {
         Log::Error(error.c_str());
         showError();
     }
