@@ -12,7 +12,7 @@
 // https://github.com/esp8266/Arduino/issues/2556
 #define NCMB_FINGERPRINT "ED:74:40:90:98:20:C4:0A:C3:DD:9B:66:8C:51:8F:DF:0F:EC:53:11"
 
-bool YudetamagoClient::GetExistance(const char *objectId, bool& exists)
+bool YudetamagoClient::GetExistance(const char *objectId, bool& exists, String& error)
 {
     String url = "https://mb.api.cloud.nifty.com/2013-09-01/classes/ToggleStocker?where=%7B%22objectId%22%3A%22";
     url += objectId;
@@ -25,10 +25,13 @@ bool YudetamagoClient::GetExistance(const char *objectId, bool& exists)
     http.addHeader("Content-Type",           "application/json");
     int httpCode = http.GET();
     if (httpCode != 200) {
-        Serial.printf("GetExistance(%s) error: http status code %d: %s\n",
-                      objectId,
-                      httpCode,
-                      http.errorToString(httpCode).c_str());
+        error = "GetExistance(";
+        error += objectId;
+        error += ") error: ";
+        error += "http status code ";
+        error += httpCode;
+        error += ": ";
+        error += http.errorToString(httpCode);
         http.end();
         return false;
     }
@@ -44,12 +47,15 @@ bool YudetamagoClient::GetExistance(const char *objectId, bool& exists)
         return true;
     }
 
-    Serial.printf("GetExistance(%s) unknown body error: %s\n", body.c_str());
+    error = "GetExistance(";
+    error += objectId;
+    error += ") unknown body error: ";
+    error += body;
     http.end();
     return false;
 }
 
-bool YudetamagoClient::SetExistance(const char *objectId, bool exists)
+bool YudetamagoClient::SetExistance(const char *objectId, bool exists, String& error)
 {
     String command = exists? "{\"existing\":\"1\"}": "{\"existing\":\"0\"}";
     String url = "https://mb.api.cloud.nifty.com/2013-09-01/classes/ToggleStocker/";
@@ -62,10 +68,13 @@ bool YudetamagoClient::SetExistance(const char *objectId, bool exists)
     http.addHeader("Content-Type",           "application/json");
     int httpCode = http.sendRequest("PUT", command);
     if (httpCode != 200) {
-        Serial.printf("SetExistance(%s) error: http status code %d: %s\n",
-                      objectId,
-                      httpCode,
-                      http.errorToString(httpCode).c_str());
+        error = "SetExistance(";
+        error += objectId;
+        error += ") error: ";
+        error += "http status code ";
+        error += httpCode;
+        error += ": ";
+        error += http.errorToString(httpCode);
         http.end();
         return false;
     }

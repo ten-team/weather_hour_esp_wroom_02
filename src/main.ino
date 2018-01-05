@@ -1,6 +1,7 @@
 #include <Adafruit_NeoPixel.h>
 #include <ESP8266WiFi.h>
 
+#include "Log.h"
 #include "Config.h"
 #include "ConfigServer.h"
 #include "NCMBConfig.h"
@@ -43,7 +44,7 @@ static void reconnectWifi() {
     String ssid;
     String pass;
     if (!Config::ReadWifiConfig(ssid, pass)) {
-        Serial.println("Faild to read config.");
+        Log::Error("Faild to read config.");
         showError();
     }
     // If forget mode(WIFI_STA), mode might be WIFI_AP_STA.
@@ -53,18 +54,23 @@ static void reconnectWifi() {
     while (WiFi.status() != WL_CONNECTED) {
         pixels.setPixelColor(NEO_PIXEL_STOCK_0, WAITING_COLOR);
         pixels.show();
-        Serial.print(".");
+        Log::Debug(".");
         delay(500);
 
         pixels.setPixelColor(NEO_PIXEL_STOCK_0, BLACK_COLOR);
         pixels.show();
-        Serial.print(".");
+        Log::Debug(".");
         delay(500);
     }
 
-    Serial.println("WiFi connected");
-    Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
+    Log::Info("WiFi connected.");
+    String log = "IP address: ";
+    IPAddress ip = WiFi.localIP();
+    log += ip[0]; log += ".";
+    log += ip[1]; log += ".";
+    log += ip[2]; log += ".";
+    log += ip[3];
+    Log::Info(log.c_str());
 }
 
 void setup() {
@@ -78,41 +84,60 @@ void setup() {
     pinMode(MODE_PIN, INPUT);
 
     if (!Config::Initialize()) {
-        Serial.println("Faild to execute SPIFFS.begin().");
+        Log::Error("Faild to execute SPIFFS.begin().");
         showError();
     }
 
     if (digitalRead(MODE_PIN) == LOW) {
-        Serial.println("Detected Config mode.");
+        Log::Info("Detected Config mode.");
         pixels.setPixelColor(NEO_PIXEL_STOCK_0, CONFIG_COLOR);
         pixels.show();
         ConfigServer::Start();
         // can not reach here.
     }
-    Serial.println("Detected Normal mode.");
+    Log::Info("Detected Normal mode.");
     reconnectWifi();
 }
 
 void loop() {
-    static bool exists = false;
+    static bool exists = true;
     for (int times=0; times<NCMB_ACCESS_INTERVAL; times+=NCMB_BUTTON_INTERVAL) {
-        if (digitalRead(STOCK_0_PIN) == LOW) {
-            exists = !exists;
-            if (!YudetamagoClient::SetExistance(OBJECT_ID, exists)) {
-                Serial.println("Faild to access NCMB.");
-                showError();
-            }
-
-            pixels.setPixelColor(NEO_PIXEL_STOCK_0, exists? EXISTS_COLOR: NOT_EXSITS_COLOR);
-            pixels.show();
-            delay(NCMB_AFTER_BUTTON_INTERVAL);
+        if (digitalRead(STOCK_0_PIN) != LOW) {
+            delay(NCMB_BUTTON_INTERVAL);
+            continue;
         }
-        delay(NCMB_BUTTON_INTERVAL);
+
+        // button pressed
+        exists = !exists;
+        if (exists) {
+            Log::Info("Detected button pressed: exist");
+        } else {
+            Log::Info("Detected button pressed: not exist");
+        }
+        String error;
+        if (!YudetamagoClient::SetExistance(OBJECT_ID, exists, error)) {
+            Log::Error(error.c_str());
+            showError();
+        }
+
+        pixels.setPixelColor(NEO_PIXEL_STOCK_0, exists? EXISTS_COLOR: NOT_EXSITS_COLOR);
+        pixels.show();
+        delay(NCMB_AFTER_BUTTON_INTERVAL);
     }
 
-    if (!YudetamagoClient::GetExistance(OBJECT_ID, exists) ) {
-        Serial.println("Faild to access NCMB.");
+    String error;
+    bool existsPrev = exists;
+    if (!YudetamagoClient::GetExistance(OBJECT_ID, exists, error) ) {
+        Log::Error(error.c_str());
         showError();
+    }
+    if (exists == existsPrev) {
+        return;
+    }
+    if (exists) {
+        Log::Info("Detected status change: exists");
+    } else {
+        Log::Info("Detected status change: not exists");
     }
     pixels.setPixelColor(NEO_PIXEL_STOCK_0, exists? EXISTS_COLOR: NOT_EXSITS_COLOR);
     pixels.show();

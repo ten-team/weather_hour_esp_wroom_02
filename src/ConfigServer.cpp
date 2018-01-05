@@ -4,23 +4,17 @@
 #include <ESP8266WebServer.h>
 
 #include "Config.h"
+#include "Log.h"
 
 ESP8266WebServer server(80);
 
 const char* server_mode_ssid     = "yudetamago_config";
 const char* server_mode_password = "yudetamago";
 
-static void handleGet()
+static void handleTemplate(const String& ssid, const String& pass, const String& info)
 {
-    String ssid;
-    String pass;
-
     String html = "<h1>WiFi config</h1>";
-    if (Config::ReadWifiConfig(ssid, pass)) {
-        html += "Successed to read wifi config.";
-    } else {
-        Serial.println("Failed to read wifi config.");
-    }
+    html += info;
     html += "<form method='post'>";
     html += "<ul>";
     html += "  <li> SSID : ";
@@ -35,24 +29,34 @@ static void handleGet()
     server.send(200, "text/html", html);
 }
 
+static void handleGet()
+{
+    String ssid;
+    String pass;
+
+    String info;
+    if (Config::ReadWifiConfig(ssid, pass)) {
+        info = "Successed to read wifi config.";
+    } else {
+        Log::Error("Failed to read wifi config.");
+    }
+    handleTemplate(ssid, pass, info);
+}
+
 static void handlePost()
 {
     String ssid = server.arg("ssid");
     String pass = server.arg("pass");
 
-    String html = "<h1>WiFi config</h1>";
+    String info;
     if (Config::WriteWifiConfig(ssid, pass) &&
         Config::ReadWifiConfig(ssid, pass)) {
-        html += "Successed to write wifi config.";
+        info = "Successed to write wifi config.";
     } else {
-        html += "Failed to write wifi config.";
-        Serial.println("Failed to write wifi config.");
+        info = "Failed to write wifi config.";
+        Log::Error("Failed to write wifi config.");
     }
-    html += "<ul>";
-    html += "  <li>SSID : " + ssid + "</li>";
-    html += "  <li>PASS : " + pass + "</li>";
-    html += "</ul>";
-    server.send(200, "text/html", html);
+    handleTemplate(ssid, pass, info);
 }
 
 void ConfigServer::Start()
@@ -63,7 +67,7 @@ void ConfigServer::Start()
     server.on("/", HTTP_GET,  handleGet);
     server.on("/", HTTP_POST, handlePost);
     server.begin();
-    Serial.println("HTTP server started.");
+    Log::Info("HTTP server started.");
     while (true) {
         server.handleClient();
     }
