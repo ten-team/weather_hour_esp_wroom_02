@@ -28,6 +28,7 @@ const int NCMB_BUTTON_INTERVAL       = (100);
 const int NCMB_AFTER_BUTTON_INTERVAL = (1000);
 const int NCMB_ACCESS_INTERVAL       = (5 * 60 * 1000);
 String object_id;
+bool exists = true;
 
 static void showError() {
     while (true) {
@@ -106,10 +107,20 @@ void setup() {
     log += object_id;
     Log::Info(log.c_str());
     reconnectWifi();
+
+    String error;
+    if (!YudetamagoClient::GetExistance(object_id.c_str(), exists, error) ) {
+        Log::Error(error.c_str());
+        showError();
+    }
+    if (exists) {
+        Log::Info("Detected initial status: exists");
+    } else {
+        Log::Info("Detected initial status: not exists");
+    }
 }
 
 void loop() {
-    static bool exists = true;
     for (int times=0; times<NCMB_ACCESS_INTERVAL; times+=NCMB_BUTTON_INTERVAL) {
         if (digitalRead(STOCK_0_PIN) != LOW) {
             delay(NCMB_BUTTON_INTERVAL);
