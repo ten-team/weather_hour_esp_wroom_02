@@ -39,3 +39,6 @@
 - Error log(optional)
   - View from /admin.html
 - 5 button(optional)
+- Web API
+  Wifi config
+  objectId
