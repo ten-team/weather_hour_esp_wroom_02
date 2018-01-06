@@ -76,6 +76,11 @@ static void reconnectWifi() {
     Log::Info(log.c_str());
 }
 
+static void showExistState() {
+    pixels.setPixelColor(NEO_PIXEL_STOCK_0, exists? EXISTS_COLOR: NOT_EXSITS_COLOR);
+    pixels.show();
+}
+
 void setup() {
     Serial.begin(115200);
     Serial.println("");
@@ -118,6 +123,7 @@ void setup() {
     } else {
         Log::Info("Detected initial status: not exists");
     }
+    showExistState();
 }
 
 void loop() {
@@ -140,8 +146,7 @@ void loop() {
             showError();
         }
 
-        pixels.setPixelColor(NEO_PIXEL_STOCK_0, exists? EXISTS_COLOR: NOT_EXSITS_COLOR);
-        pixels.show();
+        showExistState();
         delay(NCMB_AFTER_BUTTON_INTERVAL);
     }
 
@@ -159,6 +164,5 @@ void loop() {
     } else {
         Log::Info("Detected status change: not exists");
     }
-    pixels.setPixelColor(NEO_PIXEL_STOCK_0, exists? EXISTS_COLOR: NOT_EXSITS_COLOR);
-    pixels.show();
+    showExistState();
 }
