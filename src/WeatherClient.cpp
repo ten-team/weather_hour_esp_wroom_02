@@ -6,6 +6,8 @@
 #include "WeatherConfig.h"
 #include "Log.h"
 
+static WiFiClient client;
+
 static String createWeatherUri(const char *base, const char *api, const String &lat, const String &lon)
 {
     String uri = base;
@@ -33,7 +35,7 @@ int WeatherClient::GetCurrentWeather(void (*fn)(time_t t, const char *main))
 {
     String uri = createWeatherUri(CURRENT_WEATHER_URL, API_KEY, lat, lon);
     HTTPClient http;
-    http.begin(uri);
+    http.begin(client, uri);
     http.addHeader("Content-Type", "application/json");
     int httpCode = http.sendRequest("GET");
     if (httpCode != 200) {
@@ -74,7 +76,7 @@ int WeatherClient::GetForecast5Weather(void (*fn)(time_t t, const char *main))
 {
     String uri = createWeatherUri(FORECAST5_WEATHER_URL, API_KEY, lat, lon);
     HTTPClient http;
-    http.begin(uri);
+    http.begin(client, uri);
     http.addHeader("Content-Type", "application/json");
     int httpCode = http.sendRequest("GET");
     if (httpCode != 200) {
