@@ -7,7 +7,6 @@
 #include "Log.h"
 
 StaticJsonDocument<10000> doc;
-String json;
 
 static String createWeatherUri(const char *base, const char *api, const String &lat, const String &lon)
 {
@@ -44,7 +43,7 @@ int WeatherClient::GetCurrentWeather(void (*fn)(time_t t, const char *main))
         return httpCode;
     }
 
-    json = http.getString();
+    String json = http.getString();
     deserializeJson(doc, json);
 
     const char  *main = doc["weather"][0]["main"];
@@ -76,7 +75,7 @@ int WeatherClient::GetForecast5Weather(void (*fn)(time_t t, const char *main))
         return httpCode;
     }
 
-    json = http.getString();
+    String json = http.getString();
     deserializeJson(doc, json);
     for (int i=0; i<5; i++) {
         const char  *dt_txt = doc["list"][i]["dt_txt"];
