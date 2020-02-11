@@ -91,9 +91,12 @@ int WeatherClient::GetForecast5Weather(void (*fn)(time_t t, const char *main))
         // FORECAST5 returns too much body, then ignore IncompleteInput
         String log = "deserializeJson() error :";
         log += err.c_str();
-        Log::Error(log.c_str());
-        // http.end();
-        // return -1;
+        if (err.code() != err.IncompleteInput) {
+            http.end();
+            Log::Error(log.c_str());
+            return -1;
+        }
+        Log::Info(log.c_str());
     }
 
     for (int i=0; i<5; i++) {
