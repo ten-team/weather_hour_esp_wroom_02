@@ -44,7 +44,14 @@ int WeatherClient::GetCurrentWeather(void (*fn)(time_t t, const char *main))
     }
 
     String json = http.getString();
-    deserializeJson(doc, json);
+    DeserializationError err = deserializeJson(doc, json);
+    if (err) {
+        String log = "deserializeJson() error :";
+        log += err.c_str();
+        Log::Error(log.c_str());
+        http.end();
+        return -1;
+    }
 
     const char  *main = doc["weather"][0]["main"];
     const time_t dt   = doc["dt"];
@@ -77,7 +84,18 @@ int WeatherClient::GetForecast5Weather(void (*fn)(time_t t, const char *main))
     }
 
     String json = http.getString();
-    deserializeJson(doc, json);
+    // FORECAST5 returns too much body, then remove json
+    json.remove(2048);
+    DeserializationError err = deserializeJson(doc, json);
+    if (err) {
+        // FORECAST5 returns too much body, then ignore IncompleteInput
+        String log = "deserializeJson() error :";
+        log += err.c_str();
+        Log::Error(log.c_str());
+        // http.end();
+        // return -1;
+    }
+
     for (int i=0; i<5; i++) {
         const char  *dt_txt = doc["list"][i]["dt_txt"];
         const time_t dt     = doc["list"][i]["dt"];
