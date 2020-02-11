@@ -73,11 +73,7 @@ void ConfigServer::Start()
     server.on("/", HTTP_GET,  handleGet);
     server.on("/", HTTP_POST, handlePost);
     server.begin();
-    log = "HTTP server started. ";
-    log += WiFi.localIP().toString().c_str();
-    log += ":";
-    log += server_port;
-    Log::Info(log.c_str());
+    Log::Info("HTTP server started. ");
     while (true) {
         server.handleClient();
     }
