@@ -11,7 +11,7 @@
 #define STOCK_0_PIN       16
 #define LED_PIN           13
 #define NEO_PIXEL_PIN     5
-#define NUM_OF_NEO_PIXELS 1
+#define NUM_OF_NEO_PIXELS 32
 #define NEO_PIXEL_STOCK_0 0
 
 Adafruit_NeoPixel pixels        = Adafruit_NeoPixel(NUM_OF_NEO_PIXELS,
