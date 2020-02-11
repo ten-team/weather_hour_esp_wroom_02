@@ -158,7 +158,7 @@ void setup()
     Serial.println("");
 
     pixels.begin();
-    pixels.setBrightness(255);
+    pixels.setBrightness(124);
 
     pinMode(MODE_PIN, INPUT);
 
