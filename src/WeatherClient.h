@@ -1,5 +1,7 @@
 #include <Arduino.h>
 
+int unixtimeToHour(time_t t);
+
 class WeatherClient
 {
 public:
@@ -8,7 +10,16 @@ public:
 
 public:
     void SetLongitudeAndLatitude(const String &lat, const String &lon);
-    int GetForecast5Weather();
+
+    /**
+     * @see https://openweathermap.org/current
+     */
+    int GetCurrentWeather(void (*fn)(time_t t, const char *main));
+
+    /**
+     * @see https://openweathermap.org/forecast5
+     */
+    int GetForecast5Weather(void (*fn)(time_t t, const char *main));
 
 private:
     String lat;
