@@ -6,8 +6,8 @@
 
 1. [weatherhour]  Power on with button x
 1. [Smart phone] Access wifi
-   SSID : yudetamago_config
-   PASS : yudetamago
+   SSID : weatherhour_config
+   PASS : weatherhour
 1. [Smart phone] Access using web browser
    http://192.168.4.1
 1. [Smart phone] Config your SSID, and PASSWORD
