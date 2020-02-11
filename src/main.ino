@@ -32,11 +32,15 @@ bool exists = true;
 
 static void showError() {
     while (true) {
-        pixels.setPixelColor(NEO_PIXEL_STOCK_0, ERROR_COLOR);
+        for (int i=0; i<NUM_OF_NEO_PIXELS; i++) {
+            pixels.setPixelColor(i, ERROR_COLOR);
+        }
         pixels.show();
         delay(1000);
 
-        pixels.setPixelColor(NEO_PIXEL_STOCK_0, BLACK_COLOR);
+        for (int i=0; i<NUM_OF_NEO_PIXELS; i++) {
+            pixels.setPixelColor(i, BLACK_COLOR);
+        }
         pixels.show();
         delay(1000);
     }
