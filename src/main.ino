@@ -113,15 +113,23 @@ static void setHourWeather(int hour, uint32_t color)
 
 static uint32_t getHourWeather(int hour)
 {
-    pixels.getPixelColor(hour * NUM_OF_NEO_PIXELS_PER_HOUR);
+    return pixels.getPixelColor(hour * NUM_OF_NEO_PIXELS_PER_HOUR);
 }
 
 static void fnForecast5Weather(time_t t, const char *main)
 {
+    if (t == 0) {
+        Log::Error("Fails to decode json in fnForecast5Weather()");
+        return;
+    }
     int hour = unixtimeToHour(t);
     int jst12Hour = (hour + 9) % 12;
     uint32_t color = weather2color(String(main));
     if (getHourWeather(jst12Hour) != BLACK_COLOR) {
+        String log = "Skipped ";
+        log += hour;
+        log += " hour";
+        Log::Info(log.c_str());
         return;
     }
     setHourWeather(jst12Hour,     color);
@@ -131,6 +139,10 @@ static void fnForecast5Weather(time_t t, const char *main)
 
 static void fnCurrentWeather(time_t t, const char *main)
 {
+    if (t == 0) {
+        Log::Error("Fails to decode json in fnCurrentWeather()");
+        return;
+    }
     int hour = unixtimeToHour(t);
     int jst12Hour = (hour + 9) % 12;
     uint32_t color = weather2color(String(main));
@@ -146,8 +158,18 @@ static void showExistState()
         pixels.setPixelColor(i, BLACK_COLOR);
     }
 
-    weather.GetForecast5Weather(fnForecast5Weather);
-    weather.GetCurrentWeather(fnCurrentWeather);
+    int result = weather.GetForecast5Weather(fnForecast5Weather);
+    if (result != 200) {
+        String log = "Failed to execute weather.GetForecast5Weather() which returns ";
+        log += result;
+        Log::Error(log.c_str());
+    }
+    result = weather.GetCurrentWeather(fnCurrentWeather);
+    if (result != 200) {
+        String log = "Failed to execute weather.GetCurrentWeather() which returns ";
+        log += result;
+        Log::Error(log.c_str());
+    }
 
     pixels.show();
 }
