@@ -1,30 +1,17 @@
-# yudetamago-esd-wroom-02
-
-## for manufacturer
-
-### How to set up object id
-
-1. [yudetamago]  Power on with button x
-1. [Smart phone] Access wifi
-   SSID : yudetamago_config
-   PASS : yudetamago
-1. [Smart phone] Access using web browser
-   http://192.168.4.1/admin
-1. [Smart phone] Config objectId
-1. [yudetamago]  Power OFF, and Power ON
+# weather_hour_esp_wroom_02
 
 ## for user
 
 ### How to set up
 
-1. [yudetamago]  Power on with button x
+1. [weatherhour]  Power on with button x
 1. [Smart phone] Access wifi
    SSID : yudetamago_config
    PASS : yudetamago
 1. [Smart phone] Access using web browser
    http://192.168.4.1
 1. [Smart phone] Config your SSID, and PASSWORD
-1. [yudetamago]  Power OFF, and Power ON
+1. [weatherhour]  Power OFF, and Power ON
 
 ## Library
 
@@ -39,6 +26,3 @@
 - Error log(optional)
   - View from /admin.html
 - 5 button(optional)
-- Web API
-  Wifi config
-  objectId
