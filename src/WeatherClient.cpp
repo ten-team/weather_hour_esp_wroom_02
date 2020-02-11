@@ -6,8 +6,6 @@
 #include "WeatherConfig.h"
 #include "Log.h"
 
-StaticJsonDocument<10000> doc;
-
 static String createWeatherUri(const char *base, const char *api, const String &lat, const String &lon)
 {
     String uri = base;
@@ -44,6 +42,7 @@ int WeatherClient::GetCurrentWeather(void (*fn)(time_t t, const char *main))
     }
 
     String json = http.getString();
+    DynamicJsonDocument doc(4096);
     DeserializationError err = deserializeJson(doc, json);
     if (err) {
         String log = "deserializeJson() error :";
@@ -84,6 +83,7 @@ int WeatherClient::GetForecast5Weather(void (*fn)(time_t t, const char *main))
     }
 
     String json = http.getString();
+    DynamicJsonDocument doc(4096);
     // FORECAST5 returns too much body, then remove json
     json.remove(2048);
     DeserializationError err = deserializeJson(doc, json);
