@@ -60,6 +60,7 @@ int WeatherClient::GetCurrentWeather(void (*fn)(time_t t, const char *main))
     Log::Info(log.c_str());
 
     (*fn)(dt, main);
+    http.end();
     return httpCode;
 }
 
@@ -96,5 +97,6 @@ int WeatherClient::GetForecast5Weather(void (*fn)(time_t t, const char *main))
 
         (*fn)(dt, main);
     }
+    http.end();
     return httpCode;
 }
