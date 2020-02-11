@@ -127,8 +127,7 @@ static void fnForecast5Weather(time_t t, const char *main)
     uint32_t color = weather2color(String(main));
     if (getHourWeather(jst12Hour) != BLACK_COLOR) {
         String log = "Skipped ";
-        log += hour;
-        log += " hour";
+        log += t;
         Log::Info(log.c_str());
         return;
     }
