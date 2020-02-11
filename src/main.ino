@@ -4,8 +4,8 @@
 #include "Log.h"
 #include "Config.h"
 #include "ConfigServer.h"
-#include "NCMBConfig.h"
-#include "YudetamagoClient.h"
+#include "WeatherConfig.h"
+#include "WeatherClient.h"
 
 #define MODE_PIN          16
 #define NEO_PIXEL_PIN     5
@@ -23,6 +23,8 @@ const uint32_t CONFIG_COLOR     = Adafruit_NeoPixel::Color(255, 255, 255);
 const uint32_t EXISTS_COLOR     = Adafruit_NeoPixel::Color(0, 0, 0);
 const uint32_t NOT_EXSITS_COLOR = Adafruit_NeoPixel::Color(255, 0, 0);
 const int NCMB_ACCESS_INTERVAL  = (5 * 60 * 1000);
+
+WeatherClient weather;
 
 static void showError() {
     while (true) {
@@ -43,10 +45,13 @@ static void showError() {
 static void reconnectWifi() {
     String ssid;
     String pass;
-    if (!Config::ReadWifiConfig(ssid, pass)) {
+    String lat;
+    String lon;
+    if (!Config::ReadWifiConfig(ssid, pass, lat, lon)) {
         Log::Error("Faild to read config.");
         showError();
     }
+    weather.SetLongitudeAndLatitude(lat, lon);
     // If forget mode(WIFI_STA), mode might be WIFI_AP_STA.
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid.c_str(), pass.c_str());

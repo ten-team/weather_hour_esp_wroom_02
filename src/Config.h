@@ -4,7 +4,7 @@ class Config
 {
 public:
     static bool Initialize();
-    static bool ReadWifiConfig(String& ssid, String& pass);
-    static bool WriteWifiConfig(const String& ssid, const String& pass);
+    static bool ReadWifiConfig(String& ssid, String& pass, String& lat, String& lon);
+    static bool WriteWifiConfig(const String& ssid, const String& pass, const String& lat, const String& lon);
 };
 

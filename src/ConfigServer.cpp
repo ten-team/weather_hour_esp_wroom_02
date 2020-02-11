@@ -12,7 +12,7 @@ ESP8266WebServer server(server_port);
 const char* server_mode_ssid     = "weatherhour_config";
 const char* server_mode_password = "weatherhour";
 
-static void handleTemplate(const String& ssid, const String& pass, const String& info)
+static void handleTemplate(const String& ssid, const String& pass, const String& lat, const String& lon, const String& info)
 {
     String html = "<h1>WiFi config</h1>";
     html += info;
@@ -24,6 +24,12 @@ static void handleTemplate(const String& ssid, const String& pass, const String&
     html += "  <li> PASS : ";
     html += "    <input type='text' name='pass' value='" + pass + "' />";
     html += "  </li>";
+    html += "  <li> LAT : ";
+    html += "    <input type='text' name='lat' value='" + lat + "' />";
+    html += "  </li>";
+    html += "  <li> LON : ";
+    html += "    <input type='text' name='lon' value='" + lon + "' />";
+    html += "  </li>";
     html += "</ul>";
     html += "<input type='submit' />";
     html += "</form>";
@@ -34,30 +40,34 @@ static void handleGet()
 {
     String ssid;
     String pass;
+    String lat;
+    String lon;
 
     String info;
-    if (Config::ReadWifiConfig(ssid, pass)) {
+    if (Config::ReadWifiConfig(ssid, pass, lat, lon)) {
         info = "Successed to read wifi config.";
     } else {
         Log::Error("Failed to read wifi config.");
     }
-    handleTemplate(ssid, pass, info);
+    handleTemplate(ssid, pass, lat, lon, info);
 }
 
 static void handlePost()
 {
     String ssid = server.arg("ssid");
     String pass = server.arg("pass");
+    String lat  = server.arg("lat");
+    String lon  = server.arg("lon");
 
     String info;
-    if (Config::WriteWifiConfig(ssid, pass) &&
-        Config::ReadWifiConfig(ssid, pass)) {
+    if (Config::WriteWifiConfig(ssid, pass, lat, lon) &&
+        Config::ReadWifiConfig(ssid, pass, lat, lon)) {
         info = "Successed to write wifi config.";
     } else {
         info = "Failed to write wifi config.";
         Log::Error("Failed to write wifi config.");
     }
-    handleTemplate(ssid, pass, info);
+    handleTemplate(ssid, pass, lat, lon, info);
 }
 
 void ConfigServer::Start()
