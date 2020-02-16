@@ -15,6 +15,8 @@
 #define SEC_PER_HARF_DAY           (60 * 60 * 12)
 #define NUM_OF_NEO_PIXELS          (NUM_OF_NEO_PIXELS_PER_HOUR * 12)
 #define NEO_PIXEL_STOCK_0          0
+#define BREATHING_BRIGHTNESS_OFFSET 32
+#define BREATHING_INTERVAL          160
 
 Adafruit_NeoPixel pixels        = Adafruit_NeoPixel(NUM_OF_NEO_PIXELS,
                                                     NEO_PIXEL_PIN,
@@ -33,6 +35,7 @@ const uint32_t WEATHER_COLOR_SNOW    = Adafruit_NeoPixel::Color(242, 242, 255);
 const uint32_t WEATHER_COLOR_UNKNOWN = Adafruit_NeoPixel::Color(255, 0, 0);
 
 const int WEB_ACCESS_INTERVAL   = (5 * 60 * 1000);
+const int SHOW_WEATHER_TIME     = (1000);
 
 WeatherClient weatherClient;
 WeatherData   weatherData;
@@ -176,18 +179,18 @@ static void clearLeds()
     }
 }
 
-static void setCurrentTimeLed(WeatherDataOne &current)
-{
-    uint32_t color = NOW_COLOR;
-    setWeatherColor(current.getTime(), current.getTime()+1, color);
-}
-
 static uint32_t colorWithBrightness(uint32_t color, int brightness)
 {
     uint32_t r = ((color >> 16) & 0xFF) * brightness / 256;
     uint32_t g = ((color >>  8) & 0xFF) * brightness / 256;
     uint32_t b = ((color >>  0) & 0xFF) * brightness / 256;
     return (r << 16) + (g << 8) + (b << 0);
+}
+
+static void setCurrentTimeLed(WeatherDataOne &current, int brightness)
+{
+    uint32_t color = colorWithBrightness(NOW_COLOR, brightness);
+    setWeatherColor(current.getTime(), current.getTime()+1, color);
 }
 
 static void setWeatherLed(WeatherDataOne &w1, WeatherDataOne &w2, int brightness)
@@ -203,46 +206,65 @@ static void breathingOut()
         colors[i] = pixels.getPixelColor(i);
     }
 
-    for (int b=256; b>=0; b-=32) {
+    for (int b=256; b>=0; b-=BREATHING_BRIGHTNESS_OFFSET) {
         for (int i=0; i<NUM_OF_NEO_PIXELS; i++) {
             pixels.setPixelColor(i, colorWithBrightness(colors[i], b));
         }
         pixels.show();
-        delay(160);
+        delay(BREATHING_INTERVAL);
     }
 }
 
-static void breathingWeather(WeatherDataOne &c, WeatherDataOne &w1, WeatherDataOne &w2)
+static void showWeather(WeatherDataOne &c,
+                        WeatherDataOne &f0, WeatherDataOne &f1,
+                        WeatherDataOne &f2, WeatherDataOne &f3)
 {
-    for (int i=0; i<256; i+=32) {
-        setWeatherLed(w1, w2, i);
-        setCurrentTimeLed(c);
+    WeatherDataOne c12 = c;
+    c12.setTime(c.getTime() + SEC_PER_HARF_DAY);
+    for (int i=0; i<256; i+=BREATHING_BRIGHTNESS_OFFSET) {
+        setWeatherLed(c,  f0, i);
+        setWeatherLed(f0, f1, i);
+        setWeatherLed(f1, f2, i);
+        setWeatherLed(f2, f3, i);
+        setWeatherLed(f3, c12, i);
+        setCurrentTimeLed(c, i);
         pixels.show();
-        delay(160);
+        delay(BREATHING_INTERVAL);
+    }
+    breathingOut();
+}
+
+static void breathingWeatherGradually(WeatherDataOne &c,
+                                      WeatherDataOne &w1,
+                                      WeatherDataOne &w2)
+{
+    for (int i=0; i<256; i+=BREATHING_BRIGHTNESS_OFFSET) {
+        setWeatherLed(w1, w2, i);
+        pixels.show();
+        delay(BREATHING_INTERVAL);
     }
 }
 
-static void showExistState(WeatherDataOne &c,
-                           WeatherDataOne &f0, WeatherDataOne &f1,
-                           WeatherDataOne &f2, WeatherDataOne &f3)
+static void showWeatherGradually(WeatherDataOne &c,
+                                 WeatherDataOne &f0, WeatherDataOne &f1,
+                                 WeatherDataOne &f2, WeatherDataOne &f3)
 {
-    breathingOut();
-
-    breathingWeather(c, c, f0);
+    breathingWeatherGradually(c, c, f0);
     delay(500);
 
-    breathingWeather(c, f0, f1);
+    breathingWeatherGradually(c, f0, f1);
     delay(500);
 
-    breathingWeather(c, f1, f2);
+    breathingWeatherGradually(c, f1, f2);
     delay(500);
 
-    breathingWeather(c, f2, f3);
+    breathingWeatherGradually(c, f2, f3);
     delay(500);
 
     WeatherDataOne c12 = c;
     c12.setTime(c.getTime() + SEC_PER_HARF_DAY);
-    breathingWeather(c, f3, c12);
+    breathingWeatherGradually(c, f3, c12);
+    breathingOut();
 }
 
 void setup()
@@ -292,6 +314,10 @@ void loop()
     WeatherDataOne &f1 = weatherData.getForecastWeather(1);
     WeatherDataOne &f2 = weatherData.getForecastWeather(2);
     WeatherDataOne &f3 = weatherData.getForecastWeather(3);
-    showExistState(c, f0, f1, f2, f3);
+    showWeatherGradually(c, f0, f1, f2, f3);
+    int times = WEB_ACCESS_INTERVAL / SHOW_WEATHER_TIME;
+    for (int i=0; i<times; i++) {
+        showWeather(c, f0, f1, f2, f3);
+    }
     delay(WEB_ACCESS_INTERVAL);
 }
