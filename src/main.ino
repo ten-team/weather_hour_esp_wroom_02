@@ -35,7 +35,7 @@ const uint32_t WEATHER_COLOR_SNOW    = Adafruit_NeoPixel::Color(242, 242, 255);
 const uint32_t WEATHER_COLOR_UNKNOWN = Adafruit_NeoPixel::Color(255, 0, 0);
 
 const int WEB_ACCESS_INTERVAL   = (5 * 60 * 1000);
-const int SHOW_WEATHER_TIME     = (1000);
+const int SHOW_WEATHER_TIME     = (2400);
 
 WeatherClient weatherClient;
 WeatherData   weatherData;
