@@ -33,6 +33,7 @@ const uint32_t WEATHER_COLOR_SNOW    = Adafruit_NeoPixel::Color(242, 242, 255);
 const uint32_t WEATHER_COLOR_UNKNOWN = Adafruit_NeoPixel::Color(255, 0, 0);
 
 const int WEB_ACCESS_INTERVAL   = (5 * 60 * 1000);
+const int DELAY_INTERVAL        = 1000;
 
 WeatherClient weatherClient;
 WeatherData   weatherData;
@@ -54,6 +55,27 @@ static void showError()
     }
 }
 
+static void showConnectingWifi()
+{
+    for (int i=0; i<NUM_OF_NEO_PIXELS; i++) {
+        pixels.setPixelColor(i, BLACK_COLOR);
+    }
+    pixels.show();
+    delay(10);
+
+    for (int i=0; i<NUM_OF_NEO_PIXELS; i++) {
+        pixels.setPixelColor(i, WAITING_COLOR);
+        pixels.show();
+        delay(i * 3);
+    }
+
+    for (int i=0; i<NUM_OF_NEO_PIXELS; i++) {
+        pixels.setPixelColor(i, BLACK_COLOR);
+        pixels.show();
+        delay(i * 3);
+    }
+}
+
 static void reconnectWifi()
 {
     String ssid;
@@ -71,15 +93,8 @@ static void reconnectWifi()
 
     Log::Info("WiFi connecting...");
     while (WiFi.status() != WL_CONNECTED) {
-        pixels.setPixelColor(NEO_PIXEL_STOCK_0, WAITING_COLOR);
-        pixels.show();
+        showConnectingWifi();
         Log::Debug(".");
-        delay(500);
-
-        pixels.setPixelColor(NEO_PIXEL_STOCK_0, BLACK_COLOR);
-        pixels.show();
-        Log::Debug(".");
-        delay(500);
     }
 
     Log::Info("WiFi connected.");
@@ -147,35 +162,50 @@ static void fnCurrentWeather(time_t t, const char *main)
     data.setWeather(main);
 }
 
-static void showExistState()
+static void showExistState(int stage,
+                           WeatherDataOne &c,
+                           WeatherDataOne &f0, WeatherDataOne &f1,
+                           WeatherDataOne &f2, WeatherDataOne &f3)
 {
     for (int i=0; i<NUM_OF_NEO_PIXELS; i++) {
         pixels.setPixelColor(i, BLACK_COLOR);
     }
 
-    WeatherDataOne &c = weatherData.getCurrentWeather();
-    WeatherDataOne &f0 = weatherData.getForecastWeather(0);
-    WeatherDataOne &f1 = weatherData.getForecastWeather(1);
-    WeatherDataOne &f2 = weatherData.getForecastWeather(2);
-    WeatherDataOne &f3 = weatherData.getForecastWeather(3);
-
     uint32_t color = weather2color(c.getWeather().c_str());
     setWeatherColor(c.getTime(), f0.getTime(), color);
+    if (stage == 0) {
+        setWeatherColor(c.getTime(), c.getTime()+1, NOW_COLOR);
+        pixels.show();
+        return;
+    }
 
     color = weather2color(f0.getWeather().c_str());
     setWeatherColor(f0.getTime(), f1.getTime(), color);
+    if (stage == 1) {
+        setWeatherColor(c.getTime(), c.getTime()+1, NOW_COLOR);
+        pixels.show();
+        return;
+    }
 
     color = weather2color(f1.getWeather().c_str());
     setWeatherColor(f1.getTime(), f2.getTime(), color);
+    if (stage == 2) {
+        setWeatherColor(c.getTime(), c.getTime()+1, NOW_COLOR);
+        pixels.show();
+        return;
+    }
 
     color = weather2color(f2.getWeather().c_str());
     setWeatherColor(f2.getTime(), f3.getTime(), color);
+    if (stage == 3) {
+        setWeatherColor(c.getTime(), c.getTime()+1, NOW_COLOR);
+        pixels.show();
+        return;
+    }
 
     color = weather2color(f3.getWeather().c_str());
     setWeatherColor(f3.getTime(), c.getTime() + SEC_PER_HARF_DAY, color);
-
     setWeatherColor(c.getTime(), c.getTime()+1, NOW_COLOR);
-
     pixels.show();
 }
 
@@ -221,6 +251,16 @@ void loop()
         Log::Error(log.c_str());
     }
 
-    showExistState();
+    WeatherDataOne &c  = weatherData.getCurrentWeather();
+    WeatherDataOne &f0 = weatherData.getForecastWeather(0);
+    WeatherDataOne &f1 = weatherData.getForecastWeather(1);
+    WeatherDataOne &f2 = weatherData.getForecastWeather(2);
+    WeatherDataOne &f3 = weatherData.getForecastWeather(3);
+    const int STAGE_MAX = 5;
+    for (int stage=0; stage<STAGE_MAX; stage++) {
+        showExistState(stage, c, f0, f1, f2, f3);
+        delay(DELAY_INTERVAL);
+    }
     delay(WEB_ACCESS_INTERVAL);
+    delay(DELAY_INTERVAL);
 }
