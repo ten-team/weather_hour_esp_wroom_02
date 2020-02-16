@@ -321,5 +321,4 @@ void loop()
     for (int i=0; i<times; i++) {
         showWeather(c, f0, f1, f2, f3);
     }
-    delay(WEB_ACCESS_INTERVAL);
 }
