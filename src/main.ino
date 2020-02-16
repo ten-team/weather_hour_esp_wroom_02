@@ -33,7 +33,6 @@ const uint32_t WEATHER_COLOR_SNOW    = Adafruit_NeoPixel::Color(242, 242, 255);
 const uint32_t WEATHER_COLOR_UNKNOWN = Adafruit_NeoPixel::Color(255, 0, 0);
 
 const int WEB_ACCESS_INTERVAL   = (5 * 60 * 1000);
-const int DELAY_INTERVAL        = 1000;
 
 WeatherClient weatherClient;
 WeatherData   weatherData;
@@ -57,22 +56,28 @@ static void showError()
 
 static void showConnectingWifi()
 {
-    for (int i=0; i<NUM_OF_NEO_PIXELS; i++) {
-        pixels.setPixelColor(i, BLACK_COLOR);
-    }
+    clearLeds();
     pixels.show();
     delay(10);
 
     for (int i=0; i<NUM_OF_NEO_PIXELS; i++) {
         pixels.setPixelColor(i, WAITING_COLOR);
         pixels.show();
-        delay(i * 3);
+        int d = (NUM_OF_NEO_PIXELS / 2 - i) * 5;
+        if (d < 0) {
+            d = -d;
+        }
+        delay(d);
     }
 
     for (int i=0; i<NUM_OF_NEO_PIXELS; i++) {
         pixels.setPixelColor(i, BLACK_COLOR);
         pixels.show();
-        delay(i * 3);
+        int d = (NUM_OF_NEO_PIXELS / 2 - i) * 5;
+        if (d < 0) {
+            d = -d;
+        }
+        delay(d);
     }
 }
 
@@ -162,51 +167,74 @@ static void fnCurrentWeather(time_t t, const char *main)
     data.setWeather(main);
 }
 
-static void showExistState(int stage,
-                           WeatherDataOne &c,
-                           WeatherDataOne &f0, WeatherDataOne &f1,
-                           WeatherDataOne &f2, WeatherDataOne &f3)
+static void clearLeds()
 {
     for (int i=0; i<NUM_OF_NEO_PIXELS; i++) {
         pixels.setPixelColor(i, BLACK_COLOR);
     }
+}
 
-    uint32_t color = weather2color(c.getWeather().c_str());
-    setWeatherColor(c.getTime(), f0.getTime(), color);
-    if (stage == 0) {
-        setWeatherColor(c.getTime(), c.getTime()+1, NOW_COLOR);
-        pixels.show();
-        return;
-    }
+static void setCurrentTimeLed(WeatherDataOne &current)
+{
+    uint32_t color = NOW_COLOR;
+    setWeatherColor(current.getTime(), current.getTime()+1, color);
+}
 
-    color = weather2color(f0.getWeather().c_str());
-    setWeatherColor(f0.getTime(), f1.getTime(), color);
-    if (stage == 1) {
-        setWeatherColor(c.getTime(), c.getTime()+1, NOW_COLOR);
-        pixels.show();
-        return;
-    }
+static void setWeatherLed(WeatherDataOne &w1, WeatherDataOne &w2, int brightness)
+{
+    uint32_t color = weather2color(w1.getWeather().c_str());
+    uint32_t r = ((color >> 16) & 0xFF) * brightness / 256;
+    uint32_t g = ((color >>  8) & 0xFF) * brightness / 256;
+    uint32_t b = ((color >>  0) & 0xFF) * brightness / 256;
+    color = (r << 16) + (g << 8) + (b << 0);
+    setWeatherColor(w1.getTime(), w2.getTime(), color);
+}
 
-    color = weather2color(f1.getWeather().c_str());
-    setWeatherColor(f1.getTime(), f2.getTime(), color);
-    if (stage == 2) {
-        setWeatherColor(c.getTime(), c.getTime()+1, NOW_COLOR);
-        pixels.show();
-        return;
-    }
 
-    color = weather2color(f2.getWeather().c_str());
-    setWeatherColor(f2.getTime(), f3.getTime(), color);
-    if (stage == 3) {
-        setWeatherColor(c.getTime(), c.getTime()+1, NOW_COLOR);
-        pixels.show();
-        return;
-    }
-
-    color = weather2color(f3.getWeather().c_str());
-    setWeatherColor(f3.getTime(), c.getTime() + SEC_PER_HARF_DAY, color);
-    setWeatherColor(c.getTime(), c.getTime()+1, NOW_COLOR);
+static void showExistState(WeatherDataOne &c,
+                           WeatherDataOne &f0, WeatherDataOne &f1,
+                           WeatherDataOne &f2, WeatherDataOne &f3)
+{
+    clearLeds();
     pixels.show();
+
+    for (int i=0; i<256; i++) {
+        setWeatherLed(c, f0, i);
+        setCurrentTimeLed(c);
+        pixels.show();
+        delay(10);
+    }
+    delay(500);
+
+    for (int i=1; i<256; i++) {
+        setWeatherLed(f0, f1, i);
+        pixels.show();
+        delay(10);
+    }
+    delay(500);
+
+    for (int i=1; i<256; i++) {
+        setWeatherLed(f1, f2, i);
+        pixels.show();
+        delay(10);
+    }
+    delay(500);
+
+    for (int i=1; i<256; i++) {
+        setWeatherLed(f2, f3, i);
+        pixels.show();
+        delay(10);
+    }
+    delay(500);
+
+    WeatherDataOne c12 = c;
+    c12.setTime(c.getTime() + SEC_PER_HARF_DAY);
+    for (int i=1; i<256; i++) {
+        setWeatherLed(f3, c12, i);
+        setCurrentTimeLed(c);
+        pixels.show();
+        delay(10);
+    }
 }
 
 void setup()
@@ -256,10 +284,6 @@ void loop()
     WeatherDataOne &f1 = weatherData.getForecastWeather(1);
     WeatherDataOne &f2 = weatherData.getForecastWeather(2);
     WeatherDataOne &f3 = weatherData.getForecastWeather(3);
-    const int STAGE_MAX = 5;
-    for (int stage=0; stage<STAGE_MAX; stage++) {
-        showExistState(stage, c, f0, f1, f2, f3);
-        delay(DELAY_INTERVAL);
-    }
+    showExistState(c, f0, f1, f2, f3);
     delay(WEB_ACCESS_INTERVAL);
 }
