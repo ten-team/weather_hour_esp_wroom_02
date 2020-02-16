@@ -25,13 +25,23 @@ int unixtimeToHour(time_t t)
     return t / 60 / 60 % 24;
 }
 
-void WeatherClient::SetLongitudeAndLatitude(const String &lat, const String &lon)
+int unixtimeToJstHour(time_t t)
+{
+    return (unixtimeToHour(t) + 9) % 12;
+}
+
+int unixtimeToMinute(time_t t)
+{
+    return t / 60 % 60;
+}
+
+void WeatherClient::setLongitudeAndLatitude(const String &lat, const String &lon)
 {
     this->lat = lat;
     this->lon = lon;
 }
 
-int WeatherClient::GetCurrentWeather(void (*fn)(time_t t, const char *main))
+int WeatherClient::getCurrentWeather(void (*fn)(time_t t, const char *main))
 {
     String uri = createWeatherUri(CURRENT_WEATHER_URL, API_KEY, lat, lon);
     HTTPClient http;
@@ -44,7 +54,7 @@ int WeatherClient::GetCurrentWeather(void (*fn)(time_t t, const char *main))
     }
 
     String json = http.getString();
-    DynamicJsonDocument doc(4096);
+    DynamicJsonDocument doc(1024);
     DeserializationError err = deserializeJson(doc, json);
     if (err) {
         String log = "deserializeJson() error :";
@@ -57,12 +67,15 @@ int WeatherClient::GetCurrentWeather(void (*fn)(time_t t, const char *main))
     const char  *main = doc["weather"][0]["main"];
     const time_t dt   = doc["dt"];
     const int    hour = unixtimeToHour(dt);
+    const int    min  = unixtimeToMinute(dt);
 
     String log = __FUNCTION__;
     log += "(),";
     log += dt;
     log += ",";
     log += hour;
+    log += ":";
+    log += min;
     log += ",";
     log += main;
     Log::Info(log.c_str());
@@ -72,7 +85,7 @@ int WeatherClient::GetCurrentWeather(void (*fn)(time_t t, const char *main))
     return httpCode;
 }
 
-int WeatherClient::GetForecast5Weather(void (*fn)(time_t t, const char *main))
+int WeatherClient::getForecast5Weather(void (*fn)(int index, time_t t, const char *main))
 {
     String uri = createWeatherUri(FORECAST5_WEATHER_URL, API_KEY, lat, lon);
     HTTPClient http;
@@ -85,9 +98,9 @@ int WeatherClient::GetForecast5Weather(void (*fn)(time_t t, const char *main))
     }
 
     String json = http.getString();
-    DynamicJsonDocument doc(4096);
+    DynamicJsonDocument doc(8192);
     // FORECAST5 returns too much body, then remove json
-    json.remove(2048);
+    json.remove(4096);
     DeserializationError err = deserializeJson(doc, json);
     if (err) {
         // FORECAST5 returns too much body, then ignore IncompleteInput
@@ -101,24 +114,27 @@ int WeatherClient::GetForecast5Weather(void (*fn)(time_t t, const char *main))
         Log::Info(log.c_str());
     }
 
-    for (int i=0; i<5; i++) {
+    for (int i=0; i<8; i++) {
         const char  *dt_txt = doc["list"][i]["dt_txt"];
         const time_t dt     = doc["list"][i]["dt"];
         const char  *main   = doc["list"][i]["weather"][0]["main"];
         const int    hour   = unixtimeToHour(dt);
+        const int    min    = unixtimeToMinute(dt);
 
         String log = __FUNCTION__;
         log += "(),";
         log += dt;
         log += ",";
         log += hour;
+        log += ":";
+        log += min;
         log += ",";
         log += dt_txt;
         log += ",";
         log += main;
         Log::Info(log.c_str());
 
-        (*fn)(dt, main);
+        (*fn)(i, dt, main);
     }
     http.end();
     return httpCode;

@@ -6,12 +6,15 @@
 #include "ConfigServer.h"
 #include "WeatherConfig.h"
 #include "WeatherClient.h"
+#include "WeatherData.h"
 
-#define MODE_PIN          16
-#define NEO_PIXEL_PIN     5
+#define MODE_PIN                   16
+#define NEO_PIXEL_PIN              5
 #define NUM_OF_NEO_PIXELS_PER_HOUR 3
-#define NUM_OF_NEO_PIXELS (NUM_OF_NEO_PIXELS_PER_HOUR * 12)
-#define NEO_PIXEL_STOCK_0 0
+#define SEC_PER_LED_INTERVAL       (60 * 60 / NUM_OF_NEO_PIXELS_PER_HOUR)
+#define SEC_PER_HARF_DAY           (60 * 60 * 12)
+#define NUM_OF_NEO_PIXELS          (NUM_OF_NEO_PIXELS_PER_HOUR * 12)
+#define NEO_PIXEL_STOCK_0          0
 
 Adafruit_NeoPixel pixels        = Adafruit_NeoPixel(NUM_OF_NEO_PIXELS,
                                                     NEO_PIXEL_PIN,
@@ -22,6 +25,7 @@ const uint32_t ERROR_COLOR      = Adafruit_NeoPixel::Color(255, 0, 0);
 const uint32_t WAITING_COLOR    = Adafruit_NeoPixel::Color(255, 255, 51);
 const uint32_t CONFIG_COLOR     = Adafruit_NeoPixel::Color(255, 255, 255);
 
+const uint32_t NOW_COLOR             = Adafruit_NeoPixel::Color(255, 0, 0);
 const uint32_t WEATHER_COLOR_CLEAR   = Adafruit_NeoPixel::Color(255, 170, 0);
 const uint32_t WEATHER_COLOR_CLOUDS  = Adafruit_NeoPixel::Color(170, 170, 170);
 const uint32_t WEATHER_COLOR_RAIN    = Adafruit_NeoPixel::Color(0, 65, 255);
@@ -30,7 +34,8 @@ const uint32_t WEATHER_COLOR_UNKNOWN = Adafruit_NeoPixel::Color(255, 0, 0);
 
 const int WEB_ACCESS_INTERVAL   = (5 * 60 * 1000);
 
-WeatherClient weather;
+WeatherClient weatherClient;
+WeatherData   weatherData;
 
 static void showError()
 {
@@ -59,7 +64,7 @@ static void reconnectWifi()
         Log::Error("Faild to read config.");
         showError();
     }
-    weather.SetLongitudeAndLatitude(lat, lon);
+    weatherClient.setLongitudeAndLatitude(lat, lon);
     // If forget mode(WIFI_STA), mode might be WIFI_AP_STA.
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid.c_str(), pass.c_str());
@@ -103,36 +108,32 @@ static uint32_t weather2color(const String &weather)
     else                                { return WEATHER_COLOR_UNKNOWN; }
 }
 
-static void setHourWeather(int hour, uint32_t color)
+static void setWeatherColorOne(uint32_t t, uint32_t color)
 {
-    pixels.setPixelColor(hour * NUM_OF_NEO_PIXELS_PER_HOUR,     color);
-    pixels.setPixelColor(hour * NUM_OF_NEO_PIXELS_PER_HOUR + 1, color);
-    pixels.setPixelColor(hour * NUM_OF_NEO_PIXELS_PER_HOUR + 2, color);
+    int hour      = unixtimeToJstHour(t);
+    int hourIndex = hour * NUM_OF_NEO_PIXELS_PER_HOUR;
+    int min       = unixtimeToMinute(t);
+    int minIndex  = min * 60 / SEC_PER_LED_INTERVAL;
+    pixels.setPixelColor(hourIndex + minIndex, color);
 }
 
-static uint32_t getHourWeather(int hour)
+static void setWeatherColor(uint32_t from, uint32_t to, uint32_t color)
 {
-    return pixels.getPixelColor(hour * NUM_OF_NEO_PIXELS_PER_HOUR);
+    from = from - from % SEC_PER_LED_INTERVAL;
+    for (uint32_t t=from; t<to; t+=(SEC_PER_LED_INTERVAL)) {
+        setWeatherColorOne(t, color);
+    }
 }
 
-static void fnForecast5Weather(time_t t, const char *main)
+static void fnForecast5Weather(int index, time_t t, const char *main)
 {
     if (t == 0) {
         Log::Error("Fails to decode json in fnForecast5Weather()");
         return;
     }
-    int hour = unixtimeToHour(t);
-    int jst12Hour = (hour + 9) % 12;
-    uint32_t color = weather2color(String(main));
-    if (getHourWeather(jst12Hour) != BLACK_COLOR) {
-        String log = "Skipped ";
-        log += t;
-        Log::Info(log.c_str());
-        return;
-    }
-    setHourWeather(jst12Hour,     color);
-    setHourWeather(jst12Hour + 1, color);
-    setHourWeather(jst12Hour + 2, color);
+    WeatherDataOne &data = weatherData.getForecastWeather(index);
+    data.setTime(t);
+    data.setWeather(main);
 }
 
 static void fnCurrentWeather(time_t t, const char *main)
@@ -141,13 +142,9 @@ static void fnCurrentWeather(time_t t, const char *main)
         Log::Error("Fails to decode json in fnCurrentWeather()");
         return;
     }
-    int hour = unixtimeToHour(t);
-    int jst12Hour = (hour + 9) % 12;
-    uint32_t color = weather2color(String(main));
-    int remain = 3 - (jst12Hour % 3);
-    for (int i=0; i<remain; i++) {
-        setHourWeather(jst12Hour + i, color);
-    }
+    WeatherDataOne &data = weatherData.getCurrentWeather();
+    data.setTime(t);
+    data.setWeather(main);
 }
 
 static void showExistState()
@@ -156,18 +153,28 @@ static void showExistState()
         pixels.setPixelColor(i, BLACK_COLOR);
     }
 
-    int result = weather.GetForecast5Weather(fnForecast5Weather);
-    if (result != 200) {
-        String log = "Failed to execute weather.GetForecast5Weather() which returns ";
-        log += result;
-        Log::Error(log.c_str());
-    }
-    result = weather.GetCurrentWeather(fnCurrentWeather);
-    if (result != 200) {
-        String log = "Failed to execute weather.GetCurrentWeather() which returns ";
-        log += result;
-        Log::Error(log.c_str());
-    }
+    WeatherDataOne &c = weatherData.getCurrentWeather();
+    WeatherDataOne &f0 = weatherData.getForecastWeather(0);
+    WeatherDataOne &f1 = weatherData.getForecastWeather(1);
+    WeatherDataOne &f2 = weatherData.getForecastWeather(2);
+    WeatherDataOne &f3 = weatherData.getForecastWeather(3);
+
+    uint32_t color = weather2color(c.getWeather().c_str());
+    setWeatherColor(c.getTime(), f0.getTime(), color);
+
+    color = weather2color(f0.getWeather().c_str());
+    setWeatherColor(f0.getTime(), f1.getTime(), color);
+
+    color = weather2color(f1.getWeather().c_str());
+    setWeatherColor(f1.getTime(), f2.getTime(), color);
+
+    color = weather2color(f2.getWeather().c_str());
+    setWeatherColor(f2.getTime(), f3.getTime(), color);
+
+    color = weather2color(f3.getWeather().c_str());
+    setWeatherColor(f3.getTime(), c.getTime() + SEC_PER_HARF_DAY, color);
+
+    setWeatherColor(c.getTime(), c.getTime()+1, NOW_COLOR);
 
     pixels.show();
 }
@@ -200,6 +207,20 @@ void setup()
 
 void loop()
 {
+    weatherData.clear();
+    int result = weatherClient.getForecast5Weather(fnForecast5Weather);
+    if (result != 200) {
+        String log = "Failed to execute weatherClient.getForecast5Weather() which returns ";
+        log += result;
+        Log::Error(log.c_str());
+    }
+    result = weatherClient.getCurrentWeather(fnCurrentWeather);
+    if (result != 200) {
+        String log = "Failed to execute weatherClient.getCurrentWeather() which returns ";
+        log += result;
+        Log::Error(log.c_str());
+    }
+
     showExistState();
     delay(WEB_ACCESS_INTERVAL);
 }
