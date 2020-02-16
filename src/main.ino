@@ -93,7 +93,8 @@ static uint32_t weather2color(const String &weather)
     if      (weather == "Thunderstorm") { return WEATHER_COLOR_RAIN; }
     else if (weather == "Drizzle")      { return WEATHER_COLOR_RAIN; }
     else if (weather == "Rain")         { return WEATHER_COLOR_RAIN; }
-    else if (weather == "Snow")         { return WEATHER_COLOR_SNOW; }
+    else if (weather == "Mist")         { return WEATHER_COLOR_RAIN; }
+    else if (weather == "Snow")         { return WEATHER_COLOR_RAIN; }
     else if (weather == "Atmosphere")   { return WEATHER_COLOR_CLOUDS; }
     else if (weather == "Clear")        { return WEATHER_COLOR_CLEAR; }
     else if (weather == "Clouds")       { return WEATHER_COLOR_CLOUDS; }
