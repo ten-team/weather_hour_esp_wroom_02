@@ -262,5 +262,4 @@ void loop()
         delay(DELAY_INTERVAL);
     }
     delay(WEB_ACCESS_INTERVAL);
-    delay(DELAY_INTERVAL);
 }
