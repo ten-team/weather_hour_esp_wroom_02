@@ -182,61 +182,67 @@ static void setCurrentTimeLed(WeatherDataOne &current)
     setWeatherColor(current.getTime(), current.getTime()+1, color);
 }
 
-static void setWeatherLed(WeatherDataOne &w1, WeatherDataOne &w2, int brightness)
+static uint32_t colorWithBrightness(uint32_t color, int brightness)
 {
-    uint32_t color = weather2color(w1.getWeather().c_str());
     uint32_t r = ((color >> 16) & 0xFF) * brightness / 256;
     uint32_t g = ((color >>  8) & 0xFF) * brightness / 256;
     uint32_t b = ((color >>  0) & 0xFF) * brightness / 256;
-    color = (r << 16) + (g << 8) + (b << 0);
-    setWeatherColor(w1.getTime(), w2.getTime(), color);
+    return (r << 16) + (g << 8) + (b << 0);
 }
 
+static void setWeatherLed(WeatherDataOne &w1, WeatherDataOne &w2, int brightness)
+{
+    uint32_t color = weather2color(w1.getWeather().c_str());
+    setWeatherColor(w1.getTime(), w2.getTime(), colorWithBrightness(color, brightness));
+}
+
+static void breathingOut()
+{
+    uint32_t colors[NUM_OF_NEO_PIXELS];
+    for (int i=0; i<NUM_OF_NEO_PIXELS; i++) {
+        colors[i] = pixels.getPixelColor(i);
+    }
+
+    for (int b=256; b>=0; b-=32) {
+        for (int i=0; i<NUM_OF_NEO_PIXELS; i++) {
+            pixels.setPixelColor(i, colorWithBrightness(colors[i], b));
+        }
+        pixels.show();
+        delay(160);
+    }
+}
+
+static void breathingWeather(WeatherDataOne &c, WeatherDataOne &w1, WeatherDataOne &w2)
+{
+    for (int i=0; i<256; i+=32) {
+        setWeatherLed(w1, w2, i);
+        setCurrentTimeLed(c);
+        pixels.show();
+        delay(160);
+    }
+}
 
 static void showExistState(WeatherDataOne &c,
                            WeatherDataOne &f0, WeatherDataOne &f1,
                            WeatherDataOne &f2, WeatherDataOne &f3)
 {
-    clearLeds();
-    pixels.show();
+    breathingOut();
 
-    for (int i=0; i<256; i+=8) {
-        setWeatherLed(c, f0, i);
-        setCurrentTimeLed(c);
-        pixels.show();
-        delay(40);
-    }
+    breathingWeather(c, c, f0);
     delay(500);
 
-    for (int i=0; i<256; i+=8) {
-        setWeatherLed(f0, f1, i);
-        pixels.show();
-        delay(40);
-    }
+    breathingWeather(c, f0, f1);
     delay(500);
 
-    for (int i=0; i<256; i+=8) {
-        setWeatherLed(f1, f2, i);
-        pixels.show();
-        delay(40);
-    }
+    breathingWeather(c, f1, f2);
     delay(500);
 
-    for (int i=0; i<256; i+=8) {
-        setWeatherLed(f2, f3, i);
-        pixels.show();
-        delay(40);
-    }
+    breathingWeather(c, f2, f3);
     delay(500);
 
     WeatherDataOne c12 = c;
     c12.setTime(c.getTime() + SEC_PER_HARF_DAY);
-    for (int i=0; i<256; i+=8) {
-        setWeatherLed(f3, c12, i);
-        setCurrentTimeLed(c);
-        pixels.show();
-        delay(40);
-    }
+    breathingWeather(c, f3, c12);
 }
 
 void setup()
