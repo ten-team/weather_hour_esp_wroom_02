@@ -63,21 +63,23 @@ static void showConnectingWifi()
     for (int i=0; i<NUM_OF_NEO_PIXELS; i++) {
         pixels.setPixelColor(i, WAITING_COLOR);
         pixels.show();
-        int d = (NUM_OF_NEO_PIXELS / 2 - i) * 5;
+        int d = (NUM_OF_NEO_PIXELS / 2 - i);
         if (d < 0) {
             d = -d;
         }
-        delay(d);
+        d = NUM_OF_NEO_PIXELS / 2 - d;
+        delay(d * 10);
     }
 
     for (int i=0; i<NUM_OF_NEO_PIXELS; i++) {
         pixels.setPixelColor(i, BLACK_COLOR);
         pixels.show();
-        int d = (NUM_OF_NEO_PIXELS / 2 - i) * 5;
+        int d = (NUM_OF_NEO_PIXELS / 2 - i);
         if (d < 0) {
             d = -d;
         }
-        delay(d);
+        d = NUM_OF_NEO_PIXELS / 2 - d;
+        delay(d * 10);
     }
 }
 
@@ -198,42 +200,42 @@ static void showExistState(WeatherDataOne &c,
     clearLeds();
     pixels.show();
 
-    for (int i=0; i<256; i++) {
+    for (int i=0; i<256; i+=8) {
         setWeatherLed(c, f0, i);
         setCurrentTimeLed(c);
         pixels.show();
-        delay(10);
+        delay(40);
     }
     delay(500);
 
-    for (int i=1; i<256; i++) {
+    for (int i=0; i<256; i+=8) {
         setWeatherLed(f0, f1, i);
         pixels.show();
-        delay(10);
+        delay(40);
     }
     delay(500);
 
-    for (int i=1; i<256; i++) {
+    for (int i=0; i<256; i+=8) {
         setWeatherLed(f1, f2, i);
         pixels.show();
-        delay(10);
+        delay(40);
     }
     delay(500);
 
-    for (int i=1; i<256; i++) {
+    for (int i=0; i<256; i+=8) {
         setWeatherLed(f2, f3, i);
         pixels.show();
-        delay(10);
+        delay(40);
     }
     delay(500);
 
     WeatherDataOne c12 = c;
     c12.setTime(c.getTime() + SEC_PER_HARF_DAY);
-    for (int i=1; i<256; i++) {
+    for (int i=0; i<256; i+=8) {
         setWeatherLed(f3, c12, i);
         setCurrentTimeLed(c);
         pixels.show();
-        delay(10);
+        delay(40);
     }
 }
 
