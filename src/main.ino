@@ -21,8 +21,6 @@ const uint32_t BLACK_COLOR      = Adafruit_NeoPixel::Color(0, 0, 0);
 const uint32_t ERROR_COLOR      = Adafruit_NeoPixel::Color(255, 0, 0);
 const uint32_t WAITING_COLOR    = Adafruit_NeoPixel::Color(255, 255, 51);
 const uint32_t CONFIG_COLOR     = Adafruit_NeoPixel::Color(255, 255, 255);
-const uint32_t EXISTS_COLOR     = Adafruit_NeoPixel::Color(0, 0, 0);
-const uint32_t NOT_EXSITS_COLOR = Adafruit_NeoPixel::Color(255, 0, 0);
 
 const uint32_t WEATHER_COLOR_CLEAR   = Adafruit_NeoPixel::Color(255, 170, 0);
 const uint32_t WEATHER_COLOR_CLOUDS  = Adafruit_NeoPixel::Color(170, 170, 170);
