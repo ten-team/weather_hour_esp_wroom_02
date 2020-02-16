@@ -33,5 +33,13 @@
 .pioenvs
 .piolibdeps
 
+# Other libs
+.pio
+
 # for Editor
 *~
+GTAGS
+GPATH
+GRTAGS
+.emacs.desktop
+.emacs.desktop.lock
