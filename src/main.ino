@@ -57,6 +57,16 @@ static void showError()
     }
 }
 
+static int getDelayTimeWhenConnectingWifi(int index)
+{
+    int d = (NUM_OF_NEO_PIXELS / 2 - index);
+    if (d < 0) {
+        d = -d;
+    }
+    d = NUM_OF_NEO_PIXELS / 2 - d;
+    return d * d;
+}
+
 static void showConnectingWifi()
 {
     clearLeds();
@@ -66,23 +76,15 @@ static void showConnectingWifi()
     for (int i=0; i<NUM_OF_NEO_PIXELS; i++) {
         pixels.setPixelColor(i, WAITING_COLOR);
         pixels.show();
-        int d = (NUM_OF_NEO_PIXELS / 2 - i);
-        if (d < 0) {
-            d = -d;
-        }
-        d = NUM_OF_NEO_PIXELS / 2 - d;
-        delay(d * 10);
+        int d = getDelayTimeWhenConnectingWifi(i);
+        delay(d);
     }
 
     for (int i=0; i<NUM_OF_NEO_PIXELS; i++) {
         pixels.setPixelColor(i, BLACK_COLOR);
         pixels.show();
-        int d = (NUM_OF_NEO_PIXELS / 2 - i);
-        if (d < 0) {
-            d = -d;
-        }
-        d = NUM_OF_NEO_PIXELS / 2 - d;
-        delay(d * 10);
+        int d = getDelayTimeWhenConnectingWifi(i);
+        delay(d);
     }
 }
 
