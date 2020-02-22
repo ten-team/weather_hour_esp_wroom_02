@@ -3,8 +3,8 @@
 #include <ESP8266HTTPClient.h>
 #include <base64.h>
 #include <ArduinoJson.h>
+#include <log/Log.h>
 #include "WeatherConfig.h"
-#include "Log.h"
 
 static WiFiClient client;
 
@@ -44,6 +44,7 @@ void WeatherClient::setLongitudeAndLatitude(const String &lat, const String &lon
 int WeatherClient::getCurrentWeather(void (*fn)(time_t t, const char *main))
 {
     String uri = createWeatherUri(CURRENT_WEATHER_URL, API_KEY, lat, lon);
+    Log::Info(uri.c_str());
     HTTPClient http;
     http.begin(client, uri);
     http.addHeader("Content-Type", "application/json");
@@ -88,6 +89,7 @@ int WeatherClient::getCurrentWeather(void (*fn)(time_t t, const char *main))
 int WeatherClient::getForecast5Weather(void (*fn)(int index, time_t t, const char *main))
 {
     String uri = createWeatherUri(FORECAST5_WEATHER_URL, API_KEY, lat, lon);
+    Log::Info(uri.c_str());
     HTTPClient http;
     http.begin(client, uri);
     http.addHeader("Content-Type", "application/json");

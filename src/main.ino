@@ -1,7 +1,7 @@
 #include <Adafruit_NeoPixel.h>
 #include <ESP8266WiFi.h>
 
-#include "Log.h"
+#include <log/Log.h>
 #include "Config.h"
 #include "ConfigServer.h"
 #include "WeatherConfig.h"
@@ -15,8 +15,8 @@
 #define SEC_PER_HARF_DAY           (60 * 60 * 12)
 #define NUM_OF_NEO_PIXELS          (NUM_OF_NEO_PIXELS_PER_HOUR * 12)
 #define NEO_PIXEL_STOCK_0          0
-#define BREATHING_BRIGHTNESS_OFFSET 32
-#define BREATHING_INTERVAL          160
+#define BREATHING_BRIGHTNESS_OFFSET 16
+#define BREATHING_INTERVAL          80
 
 Adafruit_NeoPixel pixels        = Adafruit_NeoPixel(NUM_OF_NEO_PIXELS,
                                                     NEO_PIXEL_PIN,
@@ -64,14 +64,14 @@ static int getDelayTimeWhenConnectingWifi(int index)
         d = -d;
     }
     d = NUM_OF_NEO_PIXELS / 2 - d;
-    return d * d;
+    return d * d / 3;
 }
 
 static void showConnectingWifi()
 {
     clearLeds();
     pixels.show();
-    delay(10);
+    delay(100);
 
     for (int i=0; i<NUM_OF_NEO_PIXELS; i++) {
         pixels.setPixelColor(i, WAITING_COLOR);
@@ -233,7 +233,6 @@ static void showWeather(WeatherDataOne &c,
         pixels.show();
         delay(BREATHING_INTERVAL);
     }
-    breathingOut();
 }
 
 static void breathingWeatherGradually(WeatherDataOne &c,
@@ -266,7 +265,6 @@ static void showWeatherGradually(WeatherDataOne &c,
     WeatherDataOne c12 = c;
     c12.setTime(c.getTime() + SEC_PER_HARF_DAY);
     breathingWeatherGradually(c, f3, c12);
-    breathingOut();
 }
 
 void setup()
@@ -317,8 +315,8 @@ void loop()
     WeatherDataOne &f2 = weatherData.getForecastWeather(2);
     WeatherDataOne &f3 = weatherData.getForecastWeather(3);
     showWeatherGradually(c, f0, f1, f2, f3);
-    int times = WEB_ACCESS_INTERVAL / SHOW_WEATHER_TIME;
-    for (int i=0; i<times; i++) {
-        showWeather(c, f0, f1, f2, f3);
-    }
+    breathingOut();
+    showWeather(c, f0, f1, f2, f3);
+    delay(WEB_ACCESS_INTERVAL);
+    breathingOut();
 }
