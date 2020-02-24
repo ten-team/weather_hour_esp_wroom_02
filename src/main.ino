@@ -40,9 +40,9 @@ const int SHOW_WEATHER_TIME     = (2400);
 WeatherClient weatherClient;
 WeatherData   weatherData;
 
-static void showError()
+static void showError(int times)
 {
-    while (true) {
+    for (int i=0; times<0 || i<times; i++) {
         for (int i=0; i<NUM_OF_NEO_PIXELS; i++) {
             pixels.setPixelColor(i, ERROR_COLOR);
         }
@@ -96,7 +96,7 @@ static void reconnectWifi()
     String lon;
     if (!Config::ReadWifiConfig(ssid, pass, lat, lon)) {
         Log::Error("Faild to read config.");
-        showError();
+        showError(-1);
     }
     weatherClient.setLongitudeAndLatitude(lat, lon);
     // If forget mode(WIFI_STA), mode might be WIFI_AP_STA.
@@ -273,13 +273,13 @@ void setup()
     Serial.println("");
 
     pixels.begin();
-    pixels.setBrightness(124);
+    pixels.setBrightness(32);
 
     pinMode(MODE_PIN, INPUT);
 
     if (!Config::Initialize()) {
         Log::Error("Faild to execute SPIFFS.begin().");
-        showError();
+        showError(-1);
     }
 
     if (digitalRead(MODE_PIN) == LOW) {
@@ -301,12 +301,18 @@ void loop()
         String log = "Failed to execute weatherClient.getForecast5Weather() which returns ";
         log += result;
         Log::Error(log.c_str());
+        showError(10);
+        delay(1000);
+        return;
     }
     result = weatherClient.getCurrentWeather(fnCurrentWeather);
     if (result != 200) {
         String log = "Failed to execute weatherClient.getCurrentWeather() which returns ";
         log += result;
         Log::Error(log.c_str());
+        showError(10);
+        delay(1000);
+        return;
     }
 
     WeatherDataOne &c  = weatherData.getCurrentWeather();

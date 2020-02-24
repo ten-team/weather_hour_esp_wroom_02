@@ -7,6 +7,8 @@
 #include "WeatherConfig.h"
 
 static WiFiClient client;
+static HTTPClient http;
+static StaticJsonDocument<8192> doc;
 
 static String createWeatherUri(const char *base, const char *api, const String &lat, const String &lon)
 {
@@ -43,13 +45,15 @@ void WeatherClient::setLongitudeAndLatitude(const String &lat, const String &lon
 
 int WeatherClient::getCurrentWeather(void (*fn)(time_t t, const char *main))
 {
+    doc.clear();
     String uri = createWeatherUri(CURRENT_WEATHER_URL, API_KEY, lat, lon);
     Log::Info(uri.c_str());
-    HTTPClient http;
     http.begin(client, uri);
     http.addHeader("Content-Type", "application/json");
     int httpCode = http.sendRequest("GET");
     if (httpCode != 200) {
+        String log = "http.sendRequest(GET) returns :";
+        log += httpCode;
         http.end();
         return httpCode;
     }
@@ -61,6 +65,7 @@ int WeatherClient::getCurrentWeather(void (*fn)(time_t t, const char *main))
         String log = "deserializeJson() error :";
         log += err.c_str();
         Log::Error(log.c_str());
+        Log::Error(json.c_str());
         http.end();
         return -1;
     }
@@ -79,6 +84,12 @@ int WeatherClient::getCurrentWeather(void (*fn)(time_t t, const char *main))
     log += min;
     log += ",";
     log += main;
+    if (main == 0) {
+        Log::Error(log.c_str());
+        Log::Error(json.c_str());
+        http.end();
+        return -1;
+    }
     Log::Info(log.c_str());
 
     (*fn)(dt, main);
@@ -88,19 +99,21 @@ int WeatherClient::getCurrentWeather(void (*fn)(time_t t, const char *main))
 
 int WeatherClient::getForecast5Weather(void (*fn)(int index, time_t t, const char *main))
 {
+    doc.clear();
     String uri = createWeatherUri(FORECAST5_WEATHER_URL, API_KEY, lat, lon);
     Log::Info(uri.c_str());
-    HTTPClient http;
     http.begin(client, uri);
     http.addHeader("Content-Type", "application/json");
     int httpCode = http.sendRequest("GET");
     if (httpCode != 200) {
+        String log = "http.sendRequest(GET) returns :";
+        log += httpCode;
+        Log::Error(log.c_str());
         http.end();
         return httpCode;
     }
 
     String json = http.getString();
-    DynamicJsonDocument doc(8192);
     // FORECAST5 returns too much body, then remove json
     json.remove(4096);
     DeserializationError err = deserializeJson(doc, json);
@@ -109,8 +122,9 @@ int WeatherClient::getForecast5Weather(void (*fn)(int index, time_t t, const cha
         String log = "deserializeJson() error :";
         log += err.c_str();
         if (err.code() != err.IncompleteInput) {
-            http.end();
             Log::Error(log.c_str());
+            Log::Error(json.c_str());
+            http.end();
             return -1;
         }
         Log::Info(log.c_str());
@@ -134,6 +148,12 @@ int WeatherClient::getForecast5Weather(void (*fn)(int index, time_t t, const cha
         log += dt_txt;
         log += ",";
         log += main;
+        if (main == 0) {
+            Log::Error(log.c_str());
+            Log::Error(json.c_str());
+            http.end();
+            return -1;
+        }
         Log::Info(log.c_str());
 
         (*fn)(i, dt, main);
