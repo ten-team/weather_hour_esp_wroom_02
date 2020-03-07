@@ -338,7 +338,7 @@ void loop()
     }
     String log = "Web api retry times is ";
     log += retry_times;
-    Log::Error(log.c_str());
+    Log::Info(log.c_str());
 
     PRINT_FREE_RAM();
     WeatherDataOne &c  = weatherData.getCurrentWeather();
