@@ -13,6 +13,26 @@
 1. [Smart phone] Config your SSID, and PASSWORD
 1. [weatherhour]  Power OFF, and Power ON
 
+## for debug
+
+### build/upload
+
+```
+$ pio run --target upload
+```
+
+### monitor
+
+```
+$ pio device monitor | ts "%H:%M:%S" | tee log.txt
+```
+
+### build/upload/monitor
+
+```
+$ pio run --target upload && pio device monitor | ts "%H:%M:%S" | tee log.txt
+```
+
 ## Library
 
 - Adafruit NeoPixel Library (LGPL v3.0)
