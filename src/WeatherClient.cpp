@@ -59,7 +59,6 @@ int WeatherClient::getCurrentWeather(void (*fn)(time_t t, const char *main))
     }
 
     String json = http.getString();
-    DynamicJsonDocument doc(1024);
     DeserializationError err = deserializeJson(doc, json);
     if (err) {
         String log = "deserializeJson() error :";
