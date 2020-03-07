@@ -36,6 +36,7 @@ const uint32_t WEATHER_COLOR_UNKNOWN = Adafruit_NeoPixel::Color(255, 0, 0);
 
 const int WEB_ACCESS_INTERVAL   = (5 * 60 * 1000);
 const int SHOW_WEATHER_TIME     = (2400);
+const int WEBAPI_RETRY_MAX      = 10;
 
 WeatherClient weatherClient;
 WeatherData   weatherData;
@@ -308,26 +309,36 @@ void loop()
 {
     PRINT_FREE_RAM();
     weatherData.clear();
-    PRINT_FREE_RAM();
-    int result = weatherClient.getForecast5Weather(fnForecast5Weather);
-    if (result != 200) {
-        String log = "Failed to execute weatherClient.getForecast5Weather() which returns ";
-        log += result;
-        Log::Error(log.c_str());
-        showError(10);
-        delay(1000);
+    int retry_times = 0;
+    for (retry_times=0; retry_times<WEBAPI_RETRY_MAX; retry_times++) {
+        PRINT_FREE_RAM();
+        int result = weatherClient.getForecast5Weather(fnForecast5Weather);
+        if (result != 200) {
+            String log = "Failed to execute weatherClient.getForecast5Weather() which returns ";
+            log += result;
+            Log::Error(log.c_str());
+            delay(1000);
+            continue;
+        }
+        PRINT_FREE_RAM();
+        result = weatherClient.getCurrentWeather(fnCurrentWeather);
+        if (result != 200) {
+            String log = "Failed to execute weatherClient.getCurrentWeather() which returns ";
+            log += result;
+            Log::Error(log.c_str());
+            delay(1000);
+            continue;
+        }
+        break;
+    }
+    if (retry_times >= WEBAPI_RETRY_MAX) {
+        Log::Error("Faled to webapi retry");
+        showError(60);
         return;
     }
-    PRINT_FREE_RAM();
-    result = weatherClient.getCurrentWeather(fnCurrentWeather);
-    if (result != 200) {
-        String log = "Failed to execute weatherClient.getCurrentWeather() which returns ";
-        log += result;
-        Log::Error(log.c_str());
-        showError(10);
-        delay(1000);
-        return;
-    }
+    String log = "Web api retry times is ";
+    log += retry_times;
+    Log::Error(log.c_str());
 
     PRINT_FREE_RAM();
     WeatherDataOne &c  = weatherData.getCurrentWeather();
