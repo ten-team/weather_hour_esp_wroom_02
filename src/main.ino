@@ -40,6 +40,17 @@ const int SHOW_WEATHER_TIME     = (2400);
 WeatherClient weatherClient;
 WeatherData   weatherData;
 
+#define PRINT_FREE_RAM() printFreeRam(__FILE__, __LINE__)
+
+static void printFreeRam(const char *file, int line) {
+    String log = file;
+    log += ",";
+    log += line;
+    log += ",Free heap memory,";
+    log += ESP.getFreeHeap();
+    Log::Info(log.c_str());
+}
+
 static void showError(int times)
 {
     for (int i=0; times<0 || i<times; i++) {
@@ -295,7 +306,9 @@ void setup()
 
 void loop()
 {
+    PRINT_FREE_RAM();
     weatherData.clear();
+    PRINT_FREE_RAM();
     int result = weatherClient.getForecast5Weather(fnForecast5Weather);
     if (result != 200) {
         String log = "Failed to execute weatherClient.getForecast5Weather() which returns ";
@@ -305,6 +318,7 @@ void loop()
         delay(1000);
         return;
     }
+    PRINT_FREE_RAM();
     result = weatherClient.getCurrentWeather(fnCurrentWeather);
     if (result != 200) {
         String log = "Failed to execute weatherClient.getCurrentWeather() which returns ";
@@ -315,14 +329,25 @@ void loop()
         return;
     }
 
+    PRINT_FREE_RAM();
     WeatherDataOne &c  = weatherData.getCurrentWeather();
+    PRINT_FREE_RAM();
     WeatherDataOne &f0 = weatherData.getForecastWeather(0);
+    PRINT_FREE_RAM();
     WeatherDataOne &f1 = weatherData.getForecastWeather(1);
+    PRINT_FREE_RAM();
     WeatherDataOne &f2 = weatherData.getForecastWeather(2);
+    PRINT_FREE_RAM();
     WeatherDataOne &f3 = weatherData.getForecastWeather(3);
+    PRINT_FREE_RAM();
     showWeatherGradually(c, f0, f1, f2, f3);
+    PRINT_FREE_RAM();
     breathingOut();
+    PRINT_FREE_RAM();
     showWeather(c, f0, f1, f2, f3);
+    PRINT_FREE_RAM();
     delay(WEB_ACCESS_INTERVAL);
+    PRINT_FREE_RAM();
     breathingOut();
+    PRINT_FREE_RAM();
 }
