@@ -31,10 +31,10 @@ const uint32_t NOW_COLOR             = Adafruit_NeoPixel::Color(255, 0, 0);
 const uint32_t WEATHER_COLOR_CLEAR   = Adafruit_NeoPixel::Color(255, 170, 0);
 const uint32_t WEATHER_COLOR_CLOUDS  = Adafruit_NeoPixel::Color(170, 170, 170);
 const uint32_t WEATHER_COLOR_RAIN    = Adafruit_NeoPixel::Color(0, 65, 255);
-const uint32_t WEATHER_COLOR_SNOW    = Adafruit_NeoPixel::Color(242, 242, 255);
 const uint32_t WEATHER_COLOR_UNKNOWN = Adafruit_NeoPixel::Color(255, 0, 0);
 
 const int WEB_ACCESS_INTERVAL   = (5 * 60 * 1000);
+const int SHOW_INTERVAL         = (10 * 1000);
 const int SHOW_WEATHER_TIME     = (2400);
 const int WEBAPI_RETRY_MAX      = 10;
 
@@ -153,7 +153,8 @@ static void setWeatherColorOne(uint32_t t, uint32_t color)
     int hourIndex = hour * NUM_OF_NEO_PIXELS_PER_HOUR;
     int min       = unixtimeToMinute(t);
     int minIndex  = min * 60 / SEC_PER_LED_INTERVAL;
-    pixels.setPixelColor(hourIndex + minIndex, color);
+    int index     = (hourIndex + minIndex) % NUM_OF_NEO_PIXELS;
+    pixels.setPixelColor(index, color);
 }
 
 static void setWeatherColor(uint32_t from, uint32_t to, uint32_t color)
@@ -248,11 +249,18 @@ static void showWeather(WeatherDataOne &c,
 }
 
 static void breathingWeatherGradually(WeatherDataOne &c,
-                                      WeatherDataOne &w1,
-                                      WeatherDataOne &w2)
+                                      WeatherDataOne &w1, WeatherDataOne &w2)
 {
+    bool interlock = false;
+    if (c.getTime() >= w1.getTime() &&
+        c.getTime() <  w2.getTime()) {
+        interlock = true;
+    }
     for (int i=0; i<256; i+=BREATHING_BRIGHTNESS_OFFSET) {
         setWeatherLed(w1, w2, i);
+        if (interlock) {
+            setCurrentTimeLed(c, i);
+        }
         pixels.show();
         delay(BREATHING_INTERVAL);
     }
@@ -260,23 +268,41 @@ static void breathingWeatherGradually(WeatherDataOne &c,
 
 static void showWeatherGradually(WeatherDataOne &c,
                                  WeatherDataOne &f0, WeatherDataOne &f1,
-                                 WeatherDataOne &f2, WeatherDataOne &f3)
+                                 WeatherDataOne &f2, WeatherDataOne &f3,
+                                 WeatherDataOne &f4, WeatherDataOne &f5,
+                                 WeatherDataOne &f6, WeatherDataOne &f7)
 {
     breathingWeatherGradually(c, c, f0);
-    delay(500);
+    delay(250);
 
     breathingWeatherGradually(c, f0, f1);
-    delay(500);
+    delay(250);
 
     breathingWeatherGradually(c, f1, f2);
-    delay(500);
+    delay(250);
 
     breathingWeatherGradually(c, f2, f3);
-    delay(500);
+    delay(250);
 
-    WeatherDataOne c12 = c;
-    c12.setTime(c.getTime() + SEC_PER_HARF_DAY);
+    WeatherDataOne c12(c.getTime() + SEC_PER_HARF_DAY, f3.getWeather());
     breathingWeatherGradually(c, f3, c12);
+    delay(250);
+
+    breathingWeatherGradually(c, c12, f4);
+    delay(250);
+
+    breathingWeatherGradually(c, f4, f5);
+    delay(250);
+
+    breathingWeatherGradually(c, f5, f6);
+    delay(250);
+
+    breathingWeatherGradually(c, f6, f7);
+    delay(250);
+
+    WeatherDataOne c24(c.getTime() + SEC_PER_HARF_DAY * 2, f7.getWeather());
+    breathingWeatherGradually(c, f7, c24);
+    delay(250);
 }
 
 void setup()
@@ -342,23 +368,28 @@ void loop()
 
     PRINT_FREE_RAM();
     WeatherDataOne &c  = weatherData.getCurrentWeather();
-    PRINT_FREE_RAM();
     WeatherDataOne &f0 = weatherData.getForecastWeather(0);
-    PRINT_FREE_RAM();
     WeatherDataOne &f1 = weatherData.getForecastWeather(1);
-    PRINT_FREE_RAM();
     WeatherDataOne &f2 = weatherData.getForecastWeather(2);
-    PRINT_FREE_RAM();
     WeatherDataOne &f3 = weatherData.getForecastWeather(3);
-    PRINT_FREE_RAM();
-    showWeatherGradually(c, f0, f1, f2, f3);
-    PRINT_FREE_RAM();
-    breathingOut();
-    PRINT_FREE_RAM();
-    showWeather(c, f0, f1, f2, f3);
-    PRINT_FREE_RAM();
-    delay(WEB_ACCESS_INTERVAL);
+    WeatherDataOne &f4 = weatherData.getForecastWeather(4);
+    WeatherDataOne &f5 = weatherData.getForecastWeather(5);
+    WeatherDataOne &f6 = weatherData.getForecastWeather(6);
+    WeatherDataOne &f7 = weatherData.getForecastWeather(7);
+
     PRINT_FREE_RAM();
     breathingOut();
+    for (int t=0; t<WEB_ACCESS_INTERVAL; t+=SHOW_INTERVAL) {
+        PRINT_FREE_RAM();
+        showWeatherGradually(c, f0, f1, f2, f3, f4, f5, f6, f7);
+        PRINT_FREE_RAM();
+        breathingOut();
+        PRINT_FREE_RAM();
+        showWeather(c, f0, f1, f2, f3);
+        PRINT_FREE_RAM();
+        delay(SHOW_INTERVAL);
+        PRINT_FREE_RAM();
+        breathingOut();
+    }
     PRINT_FREE_RAM();
 }
