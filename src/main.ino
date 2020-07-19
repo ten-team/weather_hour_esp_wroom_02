@@ -360,7 +360,9 @@ void loop()
     if (retry_times >= WEBAPI_RETRY_MAX) {
         Log::Error("Faled to webapi retry");
         showError(60);
-        reconnectWifi();
+        // Perhaps memory leaks cause to fails webapi.
+        // Restart, because increase free memory.
+        ESP.restart();
         return;
     }
     String log = "Web api retry times is ";
