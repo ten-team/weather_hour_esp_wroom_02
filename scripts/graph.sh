@@ -1,6 +1,6 @@
 #!/bin/sh -x
 
-LOG_FILE=log_unix.txt
+LOG_FILE=log.txt
 LOG4GNUPLOT_FILE=log4gnuplot.txt
 
 cat ${LOG_FILE} | awk 'BEGIN{FS="[, ]"} $6=="Free" {print $1 " " $5 " " $9}' > ${LOG4GNUPLOT_FILE}
@@ -13,7 +13,7 @@ Y2LABEL="Memory"
 
 gnuplot <<EOF
 set xdata time
-set timefmt '%Y/%m/%d %H:%M:%S'
+set timefmt '%H:%M:%S'
 set format x '%H:%M:%S'
 
 set y2tics
@@ -23,6 +23,7 @@ set xlabel '$XLABEL'
 set ylabel '$YLABEL'
 set y2label '$Y2LABEL'
 set output '$OUTFILE'
-p '$LOG4GNUPLOT_FILE' u 0:2 w l ti 'line','$LOG4GNUPLOT_FILE' u 0:3 w l axes x1y2 ti 'memory'
+p '$LOG4GNUPLOT_FILE' u 1:3 w l axes x1y2 ti 'memory'
+# p '$LOG4GNUPLOT_FILE' u 1:2 w l ti 'line','$LOG4GNUPLOT_FILE' u 1:3 w l axes x1y2 ti 'memory'
 set output
 EOF
