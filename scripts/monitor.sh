@@ -1,8 +1,9 @@
 #!/bin/sh -x
 
-DIR_NAME=basename `pwd`
-LOG_FILE=${DIR_NAME}/log.txt
+PWD_ABSPATH=$(pwd)
+LOG_FILE=${PWD_ABSPATH}/log.txt
 
-cd ..
+DIR_NAME=`dirname $0`
+cd ${DIR_NAME}/..
 pio run --target upload && pio device monitor | ts "%H:%M:%S" | tee ${LOG_FILE}
 cd -
