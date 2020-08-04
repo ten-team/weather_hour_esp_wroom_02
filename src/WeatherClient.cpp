@@ -64,11 +64,12 @@ int WeatherClient::getCurrentWeather(void (*fn)(time_t t, const char *main))
         String log = "deserializeJson() error :";
         log += err.c_str();
         Log::Error(log.c_str());
-        Log::Error(json.c_str());
+        if (json.c_str()) {
+            Serial.println(json.c_str());
+        } else {
+            Log::Error("http response is null!");
+        }
         http.end();
-        Serial.println("<start json>");
-        Serial.println(json.c_str());
-        Serial.println("<end json>");
         return -1;
     }
 
@@ -130,6 +131,11 @@ int WeatherClient::getForecast5Weather(void (*fn)(int index, time_t t, const cha
             return -1;
         }
         Log::Info(log.c_str());
+        if (json.c_str()) {
+            Serial.println(json.c_str());
+        } else {
+            Log::Info("http response is null!");
+        }
     }
 
     for (int i=0; i<8; i++) {
