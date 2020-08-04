@@ -66,6 +66,9 @@ int WeatherClient::getCurrentWeather(void (*fn)(time_t t, const char *main))
         Log::Error(log.c_str());
         Log::Error(json.c_str());
         http.end();
+        Serial.println("<start json>");
+        Serial.println(json.c_str());
+        Serial.println("<end json>");
         return -1;
     }
 
