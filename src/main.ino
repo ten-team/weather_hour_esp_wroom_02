@@ -307,6 +307,10 @@ static void showWeatherGradually(WeatherDataOne &c,
 
 void setup()
 {
+    const int CAPACITY_OF_RECORDS = 32;
+    const int CAPACITY_OF_EACH_RECORD = 64;
+    Log::SetCapacity(CAPACITY_OF_RECORDS, CAPACITY_OF_EACH_RECORD);
+
     Serial.begin(115200);
     Serial.println("");
 
